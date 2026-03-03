@@ -525,17 +525,16 @@ body {
 
 /* Auth Sections */
 .auth-section {
-    display: none;
+    /* display由v-show控制，不在CSS里设置 */
 }
 
 .auth-section.active {
-    display: block;
     animation: fadeIn 0.5s ease;
 }
 
 /* Registration Form Special Layout */
 #registerForm.auth-section.active {
-    display: flex;
+    display: flex !important; /* v-show设display:""时需要覆盖为flex */
     flex-direction: column;
     height: 100%;
     max-height: 500px;

@@ -18,5 +18,10 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist'
+  },
+  test: {
+    environment: 'happy-dom',
+    globals: true,
+    exclude: ['e2e/**', 'node_modules/**']
   }
 })
