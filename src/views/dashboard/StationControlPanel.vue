@@ -113,24 +113,12 @@
         </button>
       </div>
 
-      <!-- 充电/放电参数 2x2网格 -->
+      <!-- 充电/放电参数 纯文字 -->
       <div class="param-grid">
-        <div class="param-card">
-          <div class="param-label">{{ i18n.t('chargeStopSOCLabel') }}</div>
-          <div class="param-value charge-val">⚡ {{ chargeStopSOC }}%</div>
-        </div>
-        <div class="param-card">
-          <div class="param-label">{{ i18n.t('dischargeStopSOCLabel') }}</div>
-          <div class="param-value discharge-val">🔋 {{ dischargeStopSOC }}%</div>
-        </div>
-        <div class="param-card">
-          <div class="param-label">{{ i18n.t('autoChargeLabel') }}</div>
-          <div class="param-value charge-val">⚡ {{ autoChargeStart }}-{{ autoChargeEnd }}</div>
-        </div>
-        <div class="param-card">
-          <div class="param-label">{{ i18n.t('autoDischargeLabel') }}</div>
-          <div class="param-value discharge-val">🔋 {{ autoDischargeStart }}-{{ autoDischargeEnd }}</div>
-        </div>
+        <div class="param-line"><span class="param-label">{{ i18n.t('chargeStopSOCLabel') }}</span> <span class="charge-val">⚡ {{ chargeStopSOC }}%</span></div>
+        <div class="param-line"><span class="param-label">{{ i18n.t('dischargeStopSOCLabel') }}</span> <span class="discharge-val">🔋 {{ dischargeStopSOC }}%</span></div>
+        <div class="param-line"><span class="param-label">{{ i18n.t('autoChargeLabel') }}</span> <span class="charge-val">⚡ {{ autoChargeStart }}-{{ autoChargeEnd }}</span></div>
+        <div class="param-line"><span class="param-label">{{ i18n.t('autoDischargeLabel') }}</span> <span class="discharge-val">🔋 {{ autoDischargeStart }}-{{ autoDischargeEnd }}</span></div>
       </div>
     </div>
     </div><!-- .control-panel -->
@@ -1439,37 +1427,34 @@ function saveSettings() {
   color: #ffc107;
 }
 
-/* === Settings参数2x2网格 === */
+/* === Settings参数纯文字 === */
 .param-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 6px 12px;
 }
 
-.param-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 8px;
-  padding: 8px 12px;
+.param-line {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
-.param-label {
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.4);
-  margin-bottom: 4px;
+.param-line .param-label {
+  color: rgba(255, 255, 255, 0.5);
 }
 
-.param-value {
-  font-size: 14px;
+.param-line .charge-val {
+  color: var(--color-primary);
   font-weight: 700;
 }
 
-.param-value.charge-val {
-  color: var(--color-primary);
-}
-
-.param-value.discharge-val {
+.param-line .discharge-val {
   color: #ffc107;
+  font-weight: 700;
 }
 
 </style>
