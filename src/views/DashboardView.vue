@@ -167,15 +167,19 @@ const summary = ref<DashboardSummary>({
 const stations = ref<Station[]>([])
 
 onMounted(async () => {
-  const role = authStore.user.role === 'operator' ? 'operator' : 'owner'
+  try {
+    const role = authStore.user.role === 'operator' ? 'operator' : 'owner'
 
-  const [summaryRes, stationsRes] = await Promise.all([
-    getDashboardSummary(role),
-    getStationList(role),
-  ])
+    const [summaryRes, stationsRes] = await Promise.all([
+      getDashboardSummary(role),
+      getStationList(role),
+    ])
 
-  if (summaryRes.code === 0) summary.value = summaryRes.data
-  if (stationsRes.code === 0) stations.value = stationsRes.data
+    if (summaryRes.code === 0) summary.value = summaryRes.data
+    if (stationsRes.code === 0) stations.value = stationsRes.data
+  } catch (error) {
+    console.error('Failed to load dashboard data:', error)
+  }
 })
 
 // === 格式化工具 ===

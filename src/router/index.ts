@@ -39,7 +39,38 @@ const router = createRouter({
           path: 'dashboard',
           name: 'dashboard',
           component: () => import('../views/DashboardView.vue'),
-          meta: { title: '仪表盘', roles: ['owner', 'operator'], icon: 'dashboard' },
+          meta: { title: 'Overview', roles: ['owner', 'operator'], icon: 'dashboard' },
+        },
+        // Placeholder routes (Phase 3+)
+        {
+          path: 'stations',
+          name: 'stations',
+          component: () => import('../views/DashboardView.vue'), // temp reuse
+          meta: { title: 'Station', roles: ['owner', 'operator'] },
+        },
+        {
+          path: 'fault-alarm',
+          name: 'fault-alarm',
+          component: () => import('../views/DashboardView.vue'), // temp reuse
+          meta: { title: 'Fault Alarm', roles: ['owner', 'operator'] },
+        },
+        {
+          path: 'clients',
+          name: 'clients',
+          component: () => import('../views/DashboardView.vue'), // temp reuse
+          meta: { title: 'Clients', roles: ['owner'] },
+        },
+        {
+          path: 'reports',
+          name: 'reports',
+          component: () => import('../views/DashboardView.vue'), // temp reuse
+          meta: { title: 'Reports', roles: ['operator'] },
+        },
+        {
+          path: 'logs',
+          name: 'logs',
+          component: () => import('../views/DashboardView.vue'), // temp reuse
+          meta: { title: 'Logs', roles: ['operator'] },
         },
       ],
     },

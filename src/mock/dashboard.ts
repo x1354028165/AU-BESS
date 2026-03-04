@@ -19,6 +19,7 @@ export interface Station {
   totalProfit: number    // AUD
   brand: string
   model: string
+  fcasEnabled: boolean  // FCAS frequency control ancillary service
 }
 
 export interface DashboardSummary {
@@ -48,6 +49,7 @@ export const allStations: Station[] = [
     totalProfit: 3850000.00,
     brand: 'Tesla',
     model: 'Megapack 2',
+    fcasEnabled: true,
   },
   {
     id: 'AU0003',
@@ -63,6 +65,7 @@ export const allStations: Station[] = [
     totalProfit: 2150000.00,
     brand: 'Tesla',
     model: 'Megapack 2',
+    fcasEnabled: false,
   },
   {
     id: 'AU0004',
@@ -78,6 +81,7 @@ export const allStations: Station[] = [
     totalProfit: 1620000.00,
     brand: 'Fluence',
     model: 'Gridstack',
+    fcasEnabled: true,
   },
   {
     id: 'AU0005',
@@ -93,6 +97,7 @@ export const allStations: Station[] = [
     totalProfit: 980000.00,
     brand: 'BYD',
     model: 'Cube Pro',
+    fcasEnabled: false,
   },
   {
     id: 'AU0006',
@@ -108,6 +113,7 @@ export const allStations: Station[] = [
     totalProfit: 1050000.00,
     brand: 'Samsung SDI',
     model: 'E3-R',
+    fcasEnabled: false,
   },
   {
     id: 'AU0007',
@@ -123,6 +129,7 @@ export const allStations: Station[] = [
     totalProfit: 2780000.00,
     brand: 'LG Energy',
     model: 'RESU Prime',
+    fcasEnabled: true,
   },
   {
     id: 'AU0008',
@@ -138,6 +145,7 @@ export const allStations: Station[] = [
     totalProfit: 890000.00,
     brand: 'Fluence',
     model: 'Gridstack',
+    fcasEnabled: true,
   },
 ]
 
