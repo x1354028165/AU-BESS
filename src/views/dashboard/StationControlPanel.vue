@@ -837,8 +837,8 @@ function saveSettings() {
 
 .battery-body {
   width: 100%;
-  max-width: 200px;
-  height: 32px;
+  max-width: 140px;
+  height: 26px;
   border: 2px solid rgba(255, 255, 255, 0.25);
   border-radius: 6px;
   position: relative;
@@ -846,7 +846,7 @@ function saveSettings() {
   background: rgba(255, 255, 255, 0.05);
 }
 
-.battery-row { max-width: 200px; }
+.battery-row { max-width: 180px; }
 
 .battery-fill {
   height: 100%;
