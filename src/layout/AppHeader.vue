@@ -18,24 +18,50 @@
       </router-link>
     </nav>
 
-    <!-- Right: Language + Role + User + Logout -->
+    <!-- Right: Language + Role + User Avatar Dropdown -->
     <div class="header-actions">
       <span class="lang-btn" @click="$emit('toggle-lang')">{{ lang === 'en' ? 'EN' : '中' }}</span>
       <span class="role-badge" @click="$emit('switch-role')">{{ roleLabel }} 🔄</span>
-      <div class="user-avatar">{{ avatarLetter }}</div>
-      <button class="logout-btn" @click="$emit('logout')" :title="lang === 'en' ? 'Sign Out' : '退出登录'">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="logout-icon">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-          <polyline points="16 17 21 12 16 7"/>
-          <line x1="21" y1="12" x2="9" y2="12"/>
-        </svg>
-      </button>
+      <!-- User Avatar with Hover Dropdown (v2 style) -->
+      <div class="user-dropdown" @mouseenter="showDropdown = true" @mouseleave="showDropdown = false">
+        <div class="user-avatar">{{ avatarLetter }}</div>
+        <Transition name="dropdown-fade">
+          <div v-show="showDropdown" class="dropdown-menu">
+            <div class="dropdown-user-name">{{ user.name || user.email }}</div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item" @click="handleSettings">
+              <span class="dropdown-icon">⚙️</span>
+              <span>{{ lang === 'en' ? 'Settings' : '设置' }}</span>
+            </div>
+            <div class="dropdown-item dropdown-item-danger" @click="showLogoutConfirm = true">
+              <span class="dropdown-icon">🚪</span>
+              <span>{{ lang === 'en' ? 'Logout' : '退出' }}</span>
+            </div>
+          </div>
+        </Transition>
+      </div>
     </div>
+
+    <!-- Logout Confirm Modal -->
+    <Teleport to="body">
+      <Transition name="modal-fade">
+        <div v-if="showLogoutConfirm" class="logout-overlay" @click.self="showLogoutConfirm = false">
+          <div class="logout-confirm">
+            <div class="logout-confirm-title">{{ lang === 'en' ? 'Confirm Logout' : '确认退出' }}</div>
+            <div class="logout-confirm-msg">{{ lang === 'en' ? 'Are you sure you want to logout?' : '您确定要退出系统吗？' }}</div>
+            <div class="logout-confirm-btns">
+              <button class="btn-cancel" @click="showLogoutConfirm = false">{{ lang === 'en' ? 'Cancel' : '取消' }}</button>
+              <button class="btn-confirm" @click="handleLogout">{{ lang === 'en' ? 'Confirm' : '确认退出' }}</button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </header>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { User } from '@/stores/authStore'
 
@@ -45,7 +71,7 @@ const props = defineProps<{
   alertCount: number
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   logout: []
   'switch-role': []
   'toggle-lang': []
@@ -53,6 +79,9 @@ defineEmits<{
 
 const route = useRoute()
 const router = useRouter()
+
+const showDropdown = ref(false)
+const showLogoutConfirm = ref(false)
 
 const logoPath = computed(() => `${import.meta.env.BASE_URL}logo.png`)
 
@@ -89,6 +118,17 @@ const visibleRoutes = computed(() => {
 
 function isActive(path: string): boolean {
   return route.path === path
+}
+
+function handleSettings() {
+  showDropdown.value = false
+  // Settings page placeholder - Phase 4+
+}
+
+function handleLogout() {
+  showLogoutConfirm.value = false
+  showDropdown.value = false
+  emit('logout')
 }
 </script>
 
@@ -191,9 +231,16 @@ function isActive(path: string): boolean {
   border-color: rgba(0, 255, 136, 0.5);
 }
 
+/* === User Dropdown (v2 style) === */
+.user-dropdown {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
 .user-avatar {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: linear-gradient(135deg, #00ff88, #00aaff);
   display: flex;
@@ -202,30 +249,172 @@ function isActive(path: string): boolean {
   color: #000;
   font-weight: 700;
   font-size: 14px;
+  cursor: pointer;
+  transition: transform 0.2s;
   flex-shrink: 0;
 }
 
-.logout-btn {
-  background: none;
+.user-avatar:hover {
+  transform: scale(1.05);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: rgba(0, 0, 0, 0.95);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  cursor: pointer;
-  padding: 6px;
+  border-radius: 12px;
+  padding: 8px;
+  min-width: 180px;
+  z-index: 9999;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.dropdown-fade-enter-active,
+.dropdown-fade-leave-active {
+  transition: all 0.2s ease;
+}
+
+.dropdown-fade-enter-from,
+.dropdown-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+.dropdown-user-name {
+  padding: 12px 16px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 4px 8px;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
   border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+
+.dropdown-item-danger:hover {
+  background: rgba(255, 68, 68, 0.1);
+  color: #ff6666;
+}
+
+.dropdown-icon {
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
+}
+
+/* === Logout Confirm Modal === */
+.logout-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  z-index: 10000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-fade-enter-active,
+.modal-fade-leave-active {
+  transition: all 0.25s ease;
+}
+
+.modal-fade-enter-from,
+.modal-fade-leave-to {
+  opacity: 0;
+}
+
+.modal-fade-enter-from .logout-confirm,
+.modal-fade-leave-to .logout-confirm {
+  transform: scale(0.95);
+}
+
+.logout-confirm {
+  background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 32px;
+  min-width: 320px;
+  text-align: center;
+  transition: transform 0.25s ease;
+}
+
+.logout-confirm-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 12px;
+}
+
+.logout-confirm-msg {
+  font-size: 14px;
   color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 28px;
 }
 
-.logout-btn:hover {
-  border-color: rgba(255, 68, 68, 0.3);
+.logout-confirm-btns {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.btn-cancel {
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #fff;
+}
+
+.btn-confirm {
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  background: rgba(255, 68, 68, 0.2);
+  color: #ff6666;
+  transition: all 0.2s;
+}
+
+.btn-confirm:hover {
+  background: rgba(255, 68, 68, 0.3);
   color: #ff4444;
-  background: rgba(255, 68, 68, 0.08);
-}
-
-.logout-icon {
-  width: 18px;
-  height: 18px;
 }
 </style>
