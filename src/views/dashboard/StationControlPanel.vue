@@ -113,39 +113,23 @@
         </button>
       </div>
 
-      <!-- SOC阈值（跟时段卡片对齐） -->
-      <div class="auto-schedule-grid">
-        <div class="schedule-card charge-schedule">
-          <span class="schedule-icon">⚡</span>
-          <div class="schedule-detail">
-            <span class="schedule-label">Charge Stop</span>
-            <span class="schedule-time">{{ chargeStopSOC }}%</span>
-          </div>
+      <!-- 充电/放电参数 2x2网格 -->
+      <div class="param-grid">
+        <div class="param-card">
+          <div class="param-label">{{ i18n.t('chargeStopSOCLabel') }}</div>
+          <div class="param-value charge-val">⚡ {{ chargeStopSOC }}%</div>
         </div>
-        <div class="schedule-card discharge-schedule">
-          <span class="schedule-icon">🔋</span>
-          <div class="schedule-detail">
-            <span class="schedule-label">Discharge Stop</span>
-            <span class="schedule-time">{{ dischargeStopSOC }}%</span>
-          </div>
+        <div class="param-card">
+          <div class="param-label">{{ i18n.t('dischargeStopSOCLabel') }}</div>
+          <div class="param-value discharge-val">🔋 {{ dischargeStopSOC }}%</div>
         </div>
-      </div>
-
-      <!-- Auto时段 -->
-      <div class="auto-schedule-grid">
-        <div class="schedule-card charge-schedule">
-          <span class="schedule-icon">⚡</span>
-          <div class="schedule-detail">
-            <span class="schedule-label">Charge Time</span>
-            <span class="schedule-time">{{ autoChargeStart }}-{{ autoChargeEnd }}</span>
-          </div>
+        <div class="param-card">
+          <div class="param-label">{{ i18n.t('autoChargeLabel') }}</div>
+          <div class="param-value charge-val">⚡ {{ autoChargeStart }}-{{ autoChargeEnd }}</div>
         </div>
-        <div class="schedule-card discharge-schedule">
-          <span class="schedule-icon">🔋</span>
-          <div class="schedule-detail">
-            <span class="schedule-label">Discharge Time</span>
-            <span class="schedule-time">{{ autoDischargeStart }}-{{ autoDischargeEnd }}</span>
-          </div>
+        <div class="param-card">
+          <div class="param-label">{{ i18n.t('autoDischargeLabel') }}</div>
+          <div class="param-value discharge-val">🔋 {{ autoDischargeStart }}-{{ autoDischargeEnd }}</div>
         </div>
       </div>
     </div>
@@ -1454,6 +1438,40 @@ function saveSettings() {
 .discharge-schedule .schedule-time {
   color: #ffc107;
 }
+
+/* === Settings参数2x2网格 === */
+.param-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.param-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.param-label {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 4px;
+}
+
+.param-value {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.param-value.charge-val {
+  color: var(--color-primary);
+}
+
+.param-value.discharge-val {
+  color: #ffc107;
+}
+
 </style>
 <style>
 
