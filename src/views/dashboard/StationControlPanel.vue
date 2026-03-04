@@ -113,22 +113,39 @@
         </button>
       </div>
 
-      <!-- SOC阈值 -->
-      <div class="soc-threshold-row">
-        <span class="threshold-item charge">⚡ {{ chargeStopSOC }}%</span>
-        <span class="threshold-divider">|</span>
-        <span class="threshold-item discharge">🔋 {{ dischargeStopSOC }}%</span>
+      <!-- SOC阈值（跟时段卡片对齐） -->
+      <div class="auto-schedule-grid">
+        <div class="schedule-card charge-schedule">
+          <span class="schedule-icon">⚡</span>
+          <div class="schedule-detail">
+            <span class="schedule-label">Charge Stop</span>
+            <span class="schedule-time">{{ chargeStopSOC }}%</span>
+          </div>
+        </div>
+        <div class="schedule-card discharge-schedule">
+          <span class="schedule-icon">🔋</span>
+          <div class="schedule-detail">
+            <span class="schedule-label">Discharge Stop</span>
+            <span class="schedule-time">{{ dischargeStopSOC }}%</span>
+          </div>
+        </div>
       </div>
 
       <!-- Auto时段 -->
       <div class="auto-schedule-grid">
         <div class="schedule-card charge-schedule">
           <span class="schedule-icon">⚡</span>
-          <span class="schedule-time">{{ autoChargeStart }}-{{ autoChargeEnd }}</span>
+          <div class="schedule-detail">
+            <span class="schedule-label">Charge Time</span>
+            <span class="schedule-time">{{ autoChargeStart }}-{{ autoChargeEnd }}</span>
+          </div>
         </div>
         <div class="schedule-card discharge-schedule">
           <span class="schedule-icon">🔋</span>
-          <span class="schedule-time">{{ autoDischargeStart }}-{{ autoDischargeEnd }}</span>
+          <div class="schedule-detail">
+            <span class="schedule-label">Discharge Time</span>
+            <span class="schedule-time">{{ autoDischargeStart }}-{{ autoDischargeEnd }}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -168,6 +185,29 @@
           </p>
           <div class="op-confirm-actions" style="justify-content: flex-end;">
             <button class="btn-confirm-op charge" @click="showConflictAlert = false">OK</button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
+
+  <!-- Auto关闭确认弹窗 -->
+  <Teleport to="body">
+    <Transition name="fade">
+      <div v-if="showAutoOffConfirm" class="stop-confirm-overlay" @click.self="showAutoOffConfirm = false">
+        <div class="op-confirm-modal">
+          <div class="op-confirm-header">
+            <div class="op-confirm-icon-wrap" style="background: rgba(255,165,0,0.12); box-shadow: 0 4px 12px rgba(255,165,0,0.15);">
+              <span>🔄</span>
+            </div>
+            <h3 class="op-confirm-title">{{ i18n.t('switchToManual') }}</h3>
+          </div>
+          <p style="color: rgba(255,255,255,0.6); font-size: 13px; line-height: 1.8; margin: 0 0 20px;">
+            {{ i18n.t('autoOffMsg') }}
+          </p>
+          <div class="op-confirm-actions">
+            <button class="btn-cancel" @click="showAutoOffConfirm = false">Cancel</button>
+            <button class="btn-confirm-op charge" @click="confirmAutoOff">{{ i18n.t('confirmSwitch') }}</button>
           </div>
         </div>
       </div>
@@ -441,18 +481,30 @@ const socColorClass = computed(() => {
 
 // === 状态机交互 ===
 
+const showAutoOffConfirm = ref(false)
+
 function toggleAutoMode() {
   const state = stationStates[selectedStationId.value]
 
   // Patch 1: 手动运行中→开Auto → 拦截
   if (!isAutoMode.value && state && (state.runStatus === 'charging' || state.runStatus === 'discharging')) {
     showConflictAlert.value = true
-    return // 不切换
+    return
   }
 
-  // Patch 2: Auto关闭→保持当前状态（平滑过渡）
-  // 不重置runStatus，让操作员手动STOP
+  // Patch 2: Auto关闭时，如果正在运行，弹确认弹窗
+  if (isAutoMode.value && state && (state.runStatus === 'charging' || state.runStatus === 'discharging')) {
+    showAutoOffConfirm.value = true
+    return
+  }
+
   isAutoMode.value = !isAutoMode.value
+}
+
+function confirmAutoOff() {
+  // 关闭Auto，保持当前运行状态，激活手动STOP
+  isAutoMode.value = false
+  showAutoOffConfirm.value = false
 }
 
 function handleCharge() {
@@ -1343,31 +1395,7 @@ function saveSettings() {
 }
 
 /* === Settings v2布局 === */
-.soc-threshold-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-bottom: 10px;
-}
 
-.threshold-item {
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.threshold-item.charge {
-  color: var(--color-primary);
-}
-
-.threshold-item.discharge {
-  color: #ffc107;
-}
-
-.threshold-divider {
-  color: rgba(255, 255, 255, 0.15);
-  font-size: 14px;
-}
 
 .auto-schedule-grid {
   display: grid;
@@ -1392,8 +1420,22 @@ function saveSettings() {
 .schedule-card {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
+  gap: 10px;
+  padding: 10px 12px;
+}
+
+.schedule-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.schedule-label {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .schedule-icon {
