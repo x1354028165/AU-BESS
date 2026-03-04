@@ -225,7 +225,7 @@
 
           <div class="auto-confirm-footer">
             <button class="btn-edit-settings" @click="editSettingsFromAutoConfirm">{{ i18n.t('editSettings') }}</button>
-            <button class="btn-cancel" @click="showAutoOnConfirm = false">Cancel</button>
+            <button class="btn-cancel" @click="showAutoOnConfirm = false">{{ i18n.t("cancel") }}</button>
             <button class="btn-confirm-op charge" @click="confirmEnableAuto">{{ i18n.t('confirmEnable') }}</button>
           </div>
         </div>
@@ -249,7 +249,7 @@
             {{ i18n.t('confirmDisableAutoDesc') }}
           </p>
           <div class="op-confirm-actions">
-            <button class="btn-cancel" @click="showAutoOffConfirm = false">Cancel</button>
+            <button class="btn-cancel" @click="showAutoOffConfirm = false">{{ i18n.t("cancel") }}</button>
             <button class="btn-confirm-op charge" @click="confirmAutoOff">{{ i18n.t('confirmDisable') }}</button>
           </div>
         </div>
@@ -270,11 +270,11 @@
 
           <!-- SOC Settings -->
           <div class="settings-section">
-            <h3 class="settings-section-title">🔋 SOC Settings</h3>
+            <h3 class="settings-section-title">🔋 {{ i18n.t("socSettings") }}</h3>
             <div class="soc-settings-row">
               <div class="soc-setting-item">
                 <div class="soc-header-row">
-                  <label class="soc-setting-label charge-label">Charge Stop SOC</label>
+                  <label class="soc-setting-label charge-label">{{ i18n.t("chargeStopSOCLabel") }}</label>
                   <div class="soc-input-wrap">
                     <input type="number" v-model.number="editChargeSOC" min="0" max="100" class="soc-number-input charge-input" />
                     <span>%</span>
@@ -284,7 +284,7 @@
               </div>
               <div class="soc-setting-item">
                 <div class="soc-header-row">
-                  <label class="soc-setting-label discharge-label">Discharge Stop SOC</label>
+                  <label class="soc-setting-label discharge-label">{{ i18n.t("dischargeStopSOCLabel") }}</label>
                   <div class="soc-input-wrap">
                     <input type="number" v-model.number="editDischargeSOC" min="0" max="100" class="soc-number-input discharge-input" />
                     <span>%</span>
@@ -297,8 +297,8 @@
 
           <!-- Auto Conditions -->
           <div class="settings-section">
-            <h3 class="settings-section-title">⏰ Time Condition Settings</h3>
-            <p class="settings-hint">💡 Set charge and discharge time windows. Charge and discharge periods cannot overlap — conflicts are detected automatically before saving.</p>
+            <h3 class="settings-section-title">⏰ {{ i18n.t("timeConditionSettings") }}</h3>
+            <p class="settings-hint">💡 {{ i18n.t("settingsHint") }}</p>
 
             <!-- 24h 时间轴可视化 -->
             <div class="timeline-bar">
@@ -314,7 +314,7 @@
 
             <div class="time-settings-row">
               <div class="time-setting-item">
-                <label class="time-setting-label charge-label">Charge Time</label>
+                <label class="time-setting-label charge-label">{{ i18n.t("autoChargeLabel") }}</label>
                 <div class="time-inputs">
                   <input type="time" v-model="editChargeStart" class="time-input-field" />
                   <span class="time-dash">-</span>
@@ -322,7 +322,7 @@
                 </div>
               </div>
               <div class="time-setting-item">
-                <label class="time-setting-label discharge-label">Discharge Time</label>
+                <label class="time-setting-label discharge-label">{{ i18n.t("autoDischargeLabel") }}</label>
                 <div class="time-inputs">
                   <input type="time" v-model="editDischargeStart" class="time-input-field" />
                   <span class="time-dash">-</span>
@@ -334,8 +334,8 @@
 
           <!-- Actions -->
           <div class="settings-modal-actions">
-            <button class="btn-cancel" @click="closeSettings">Cancel</button>
-            <button class="btn-save-settings" @click="saveSettings">Save Settings</button>
+            <button class="btn-cancel" @click="closeSettings">{{ i18n.t("cancel") }}</button>
+            <button class="btn-save-settings" @click="saveSettings">{{ i18n.t("saveSettings") }}</button>
           </div>
         </div>
       </div>
@@ -381,7 +381,7 @@
 
           <!-- Actions -->
           <div class="op-confirm-actions">
-            <button class="btn-cancel" @click="showOperationConfirm = false">Cancel</button>
+            <button class="btn-cancel" @click="showOperationConfirm = false">{{ i18n.t("cancel") }}</button>
             <button
               class="btn-confirm-op"
               :class="pendingOperation"
