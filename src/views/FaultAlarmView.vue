@@ -179,6 +179,26 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Resolve确认弹窗 -->
+    <Teleport to="body">
+    <Transition name="fade">
+      <div v-if="showResolveConfirm" class="resolve-overlay" @click.self="showResolveConfirm = false">
+        <div class="resolve-modal">
+          <div class="resolve-icon">⚠️</div>
+          <h3 class="resolve-title">Confirm Resolve</h3>
+          <p class="resolve-desc" v-if="pendingResolveItem">
+            Are you sure you want to resolve this alarm?<br>
+            <strong>{{ pendingResolveItem.description }}</strong> at <strong>{{ pendingResolveItem.station }}</strong>
+          </p>
+          <div class="resolve-actions">
+            <button class="resolve-cancel" @click="showResolveConfirm = false">Cancel</button>
+            <button class="resolve-confirm" @click="confirmResolve">Resolve</button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -449,10 +469,22 @@ function toggleSelectAll() {
   }
 }
 
+const showResolveConfirm = ref(false)
+const pendingResolveItem = ref<AlarmRecord | null>(null)
+
 function resolveAlarm(item: AlarmRecord) {
-  item.status = 'processed'
-  item.recoveryTime = Date.now()
-  selectedIds.value = selectedIds.value.filter(id => id !== item.id)
+  pendingResolveItem.value = item
+  showResolveConfirm.value = true
+}
+
+function confirmResolve() {
+  if (pendingResolveItem.value) {
+    pendingResolveItem.value.status = 'processed'
+    pendingResolveItem.value.recoveryTime = Date.now()
+    selectedIds.value = selectedIds.value.filter(id => id !== pendingResolveItem.value!.id)
+  }
+  showResolveConfirm.value = false
+  pendingResolveItem.value = null
 }
 
 function batchProcess() {
@@ -842,8 +874,13 @@ function closeDrawer() {
   background: var(--color-primary-dim);
 }
 
+.alarm-table td:last-child {
+  min-width: 140px;
+  white-space: nowrap;
+}
+
 .btn-detail-action {
-  padding: 5px 14px;
+  padding: 5px 10px;
   background: transparent;
   color: var(--color-warning);
   border: 1px solid var(--color-warning);
@@ -1068,5 +1105,86 @@ function closeDrawer() {
   .drawer-panel {
     width: 100%;
   }
+}
+</style>
+
+<style>
+.resolve-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.resolve-modal {
+  background: #1a1f2e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 28px 32px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+}
+
+.resolve-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+}
+
+.resolve-title {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+
+.resolve-desc {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0 0 24px;
+}
+
+.resolve-desc strong {
+  color: #fff;
+}
+
+.resolve-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.resolve-cancel {
+  padding: 10px 24px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.resolve-cancel:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.resolve-confirm {
+  padding: 10px 24px;
+  background: var(--color-primary);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.resolve-confirm:hover {
+  background: #00cc6a;
 }
 </style>
