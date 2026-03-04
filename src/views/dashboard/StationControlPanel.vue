@@ -109,7 +109,7 @@
       <div class="settings-header">
         <h4 class="settings-title">{{ i18n.t('settings') }}</h4>
         <button class="settings-edit-btn" @click="toggleEditMode">
-          {{ isEditMode ? i18n.t('save') : i18n.t('edit') }}
+          {{ i18n.t('edit') }}
         </button>
       </div>
 
@@ -163,6 +163,78 @@
           <div class="stop-confirm-actions">
             <button class="btn-cancel" @click="showStopConfirm = false">{{ i18n.t('cancel') }}</button>
             <button class="btn-confirm-stop" @click="confirmStop">{{ i18n.t('confirmStopBtn') }}</button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
+
+  <!-- Settings 设置弹窗 (v2风格全屏modal) -->
+  <Teleport to="body">
+    <Transition name="fade">
+      <div v-if="showSettingsModal" class="stop-confirm-overlay" @click.self="closeSettings">
+        <div class="settings-modal">
+          <div class="settings-modal-header">
+            <h2>Settings</h2>
+            <span class="settings-station-tag">{{ currentStation.name?.split(' ')[0] }}</span>
+            <button class="settings-close-btn" @click="closeSettings">✕</button>
+          </div>
+
+          <!-- SOC Settings -->
+          <div class="settings-section">
+            <h3 class="settings-section-title">🔋 SOC Settings</h3>
+            <div class="soc-settings-row">
+              <div class="soc-setting-item">
+                <label class="soc-setting-label charge-label">Charge Stop SOC</label>
+                <div class="soc-slider-wrap">
+                  <input type="range" v-model.number="editChargeSOC" min="0" max="100" class="soc-slider charge-slider" />
+                  <div class="soc-input-wrap">
+                    <input type="number" v-model.number="editChargeSOC" min="0" max="100" class="soc-number-input" />
+                    <span>%</span>
+                  </div>
+                </div>
+              </div>
+              <div class="soc-setting-item">
+                <label class="soc-setting-label discharge-label">Discharge Stop SOC</label>
+                <div class="soc-slider-wrap">
+                  <input type="range" v-model.number="editDischargeSOC" min="0" max="100" class="soc-slider discharge-slider" />
+                  <div class="soc-input-wrap">
+                    <input type="number" v-model.number="editDischargeSOC" min="0" max="100" class="soc-number-input" />
+                    <span>%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Auto Conditions -->
+          <div class="settings-section">
+            <h3 class="settings-section-title">⏰ Auto Conditions</h3>
+            <p class="settings-hint">💡 Set charge and discharge time windows. Charge and discharge periods cannot overlap.</p>
+            <div class="time-settings-row">
+              <div class="time-setting-item">
+                <label class="time-setting-label charge-label">Charge Time</label>
+                <div class="time-inputs">
+                  <input type="time" v-model="editChargeStart" class="time-input-field" />
+                  <span class="time-dash">-</span>
+                  <input type="time" v-model="editChargeEnd" class="time-input-field" />
+                </div>
+              </div>
+              <div class="time-setting-item">
+                <label class="time-setting-label discharge-label">Discharge Time</label>
+                <div class="time-inputs">
+                  <input type="time" v-model="editDischargeStart" class="time-input-field" />
+                  <span class="time-dash">-</span>
+                  <input type="time" v-model="editDischargeEnd" class="time-input-field" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="settings-modal-actions">
+            <button class="btn-cancel" @click="closeSettings">Cancel</button>
+            <button class="btn-save-settings" @click="saveSettings">Save Settings</button>
           </div>
         </div>
       </div>
@@ -253,6 +325,13 @@ const isAutoMode = ref(true)
 const showStopOverlay = ref(false)
 const showStopConfirm = ref(false)
 const showOperationConfirm = ref(false)
+const showSettingsModal = ref(false)
+const editChargeSOC = ref(75)
+const editDischargeSOC = ref(30)
+const editChargeStart = ref('09:00')
+const editChargeEnd = ref('13:00')
+const editDischargeStart = ref('17:00')
+const editDischargeEnd = ref('21:00')
 const pendingOperation = ref<'charge' | 'discharge'>('charge') // 默认Auto
 
 // 每个电站的可变运行状态（独立于base数据）
@@ -401,7 +480,14 @@ function confirmStop() {
 }
 
 function toggleEditMode() {
-  isEditMode.value = !isEditMode.value
+  // 打开Settings弹窗 (v2风格)
+  editChargeSOC.value = chargeStopSOC.value
+  editDischargeSOC.value = dischargeStopSOC.value
+  editChargeStart.value = autoChargeStart.value
+  editChargeEnd.value = autoChargeEnd.value
+  editDischargeStart.value = autoDischargeStart.value
+  editDischargeEnd.value = autoDischargeEnd.value
+  showSettingsModal.value = true
 }
 </script>
 
@@ -938,6 +1024,7 @@ function toggleEditMode() {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  height: 100%;
 }
 
 .station-select-top {
@@ -1264,5 +1351,202 @@ function toggleEditMode() {
   padding: 4px 6px;
   font-size: 13px;
 }
+</style>
+<style>
+
+/* === Settings Modal (v2风格) === */
+.settings-modal {
+  background: #1a1f2e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 28px 32px;
+  max-width: 680px;
+  width: 92%;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.settings-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.settings-modal-header h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+}
+
+.settings-station-tag {
+  background: rgba(0, 255, 136, 0.12);
+  color: var(--color-primary);
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.settings-close-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.settings-close-btn:hover { color: #fff; }
+
+.settings-section {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.settings-section-title {
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+}
+
+.settings-hint {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.soc-settings-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.soc-setting-item {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.soc-setting-label { font-size: 13px; font-weight: 600; }
+.charge-label { color: var(--color-primary); }
+.discharge-label { color: #ffc107; }
+
+.soc-slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.soc-slider {
+  flex: 1;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  outline: none;
+}
+
+.charge-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--color-primary);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 255, 136, 0.3);
+}
+
+.discharge-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #ffc107;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+}
+
+.soc-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+}
+
+.soc-number-input {
+  width: 52px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  color: #fff;
+  padding: 6px 8px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.time-settings-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.time-setting-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.time-setting-label { font-size: 13px; font-weight: 600; }
+
+.time-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.time-input-field {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  color: #fff;
+  padding: 8px 12px;
+  font-size: 14px;
+  flex: 1;
+}
+
+.time-dash {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 16px;
+}
+
+.settings-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.btn-save-settings {
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: none;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-save-settings:hover { background: #00cc6a; }
 
 </style>

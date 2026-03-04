@@ -446,8 +446,8 @@ onUnmounted(() => {
   padding: 16px;
   animation: pageFadeIn 0.3s ease-out;
 }
-.left-panel { grid-column: 1; grid-row: 1; }
-.right-panel { grid-column: 2; grid-row: 1; }
+.left-panel { grid-column: 1; grid-row: 1; align-self: stretch; }
+.right-panel { grid-column: 2; grid-row: 1; align-self: stretch; }
 .bottom-panel { grid-column: 1 / -1; grid-row: 2; }
 
 .market-card {
