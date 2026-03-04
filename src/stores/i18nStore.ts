@@ -117,6 +117,11 @@ const messages: Record<string, Record<Locale, string>> = {
   cumulative: { en: 'Cumulative', zh: '累计' },
 
   // Header UI
+  operationType: { en: 'Operation Type', zh: '操作类型' },
+  estChargeTime: { en: 'Est. Full Charge Time', zh: '预计充满时间' },
+  estDischargeTime: { en: 'Est. Full Discharge Time', zh: '预计放完时间' },
+  estCost: { en: 'Est. Cost', zh: '预计成本' },
+  estRevenue: { en: 'Est. Revenue', zh: '预计收益' },
   confirmCharge: { en: 'Confirm Charge Operation', zh: '确认充电操作' },
   confirmDischarge: { en: 'Confirm Discharge Operation', zh: '确认放电操作' },
   chargeWarning: { en: 'Will start charging from grid. This will consume grid power.', zh: '即将开始从电网充电，此操作将消耗电网电力。' },

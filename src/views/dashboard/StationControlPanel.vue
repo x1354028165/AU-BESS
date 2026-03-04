@@ -203,36 +203,48 @@
   <Teleport to="body">
     <Transition name="fade">
       <div v-if="showOperationConfirm" class="stop-confirm-overlay" @click.self="showOperationConfirm = false">
-        <div class="stop-confirm-modal operation-confirm-modal">
-          <div class="stop-confirm-icon">{{ pendingOperation === 'charge' ? '⚡' : '🔋' }}</div>
-          <h3 :style="{ color: pendingOperation === 'charge' ? 'var(--color-primary)' : '#ffc107' }">
-            {{ pendingOperation === 'charge' ? i18n.t('confirmCharge') : i18n.t('confirmDischarge') }}
-          </h3>
-          <div class="operation-info">
-            <div class="op-info-row">
-              <span class="op-info-label">{{ i18n.t('station') }}</span>
-              <span class="op-info-value">{{ currentStation.name }}</span>
+        <div class="op-confirm-modal">
+          <!-- Header: icon + title -->
+          <div class="op-confirm-header">
+            <div class="op-confirm-icon-wrap" :class="pendingOperation">
+              <span>{{ pendingOperation === 'charge' ? '⚡' : '🔋' }}</span>
             </div>
-            <div class="op-info-row">
-              <span class="op-info-label">{{ i18n.t('currentSpotPrice') }}</span>
-              <span class="op-info-value">${{ currentStation.currentSpotPrice?.toFixed(2) }}/MWh</span>
+            <h3 class="op-confirm-title">
+              {{ pendingOperation === 'charge' ? i18n.t('confirmCharge') : i18n.t('confirmDischarge') }}
+            </h3>
+          </div>
+
+          <!-- 2x2 Grid Cards (v2 style) -->
+          <div class="op-info-grid">
+            <div class="op-info-card">
+              <div class="op-card-label">{{ i18n.t('operationType') }}</div>
+              <div class="op-card-value" :class="pendingOperation">
+                {{ pendingOperation === 'charge' ? 'Charge' : 'Discharge' }}
+              </div>
             </div>
-            <div class="op-info-row">
-              <span class="op-info-label">SOC</span>
-              <span class="op-info-value">{{ currentStation.soc }}%</span>
+            <div class="op-info-card">
+              <div class="op-card-label">Current SOC</div>
+              <div class="op-card-value" :class="pendingOperation">{{ currentStation.soc }}%</div>
+            </div>
+            <div class="op-info-card">
+              <div class="op-card-label">{{ pendingOperation === 'charge' ? i18n.t('estChargeTime') : i18n.t('estDischargeTime') }}</div>
+              <div class="op-card-value">{{ estimatedTime }}</div>
+            </div>
+            <div class="op-info-card">
+              <div class="op-card-label">{{ pendingOperation === 'charge' ? i18n.t('estCost') : i18n.t('estRevenue') }}</div>
+              <div class="op-card-value">{{ estimatedCost }}</div>
             </div>
           </div>
-          <p class="op-warning">
-            {{ pendingOperation === 'charge' ? i18n.t('chargeWarning') : i18n.t('dischargeWarning') }}
-          </p>
-          <div class="stop-confirm-actions">
-            <button class="btn-cancel" @click="showOperationConfirm = false">{{ i18n.t('cancel') }}</button>
+
+          <!-- Actions -->
+          <div class="op-confirm-actions">
+            <button class="btn-cancel" @click="showOperationConfirm = false">Cancel</button>
             <button
               class="btn-confirm-op"
-              :class="pendingOperation === 'charge' ? 'btn-charge' : 'btn-discharge'"
+              :class="pendingOperation"
               @click="confirmOperation"
             >
-              {{ pendingOperation === 'charge' ? i18n.t('startCharge') : i18n.t('startDischarge') }}
+              {{ pendingOperation === 'charge' ? 'Confirm Charge' : 'Confirm Discharge' }}
             </button>
           </div>
         </div>
@@ -316,6 +328,37 @@ const priceCircleClass = computed(() => {
 })
 
 // SOC颜色
+// 预估充放电时间和成本
+const estimatedTime = computed(() => {
+  const soc = currentStation.value.soc
+  const capacity = currentStation.value.capacity || 50
+  if (pendingOperation.value === 'charge') {
+    const remaining = 100 - soc
+    const hours = (remaining / 100) * (capacity / 25) // 大约25MW充电速率
+    const h = Math.floor(hours)
+    const m = Math.round((hours - h) * 60)
+    return h > 0 ? h + 'h ' + m + 'min' : m + 'min'
+  } else {
+    const hours = (soc / 100) * (capacity / 25)
+    const h = Math.floor(hours)
+    const m = Math.round((hours - h) * 60)
+    return h > 0 ? h + 'h ' + m + 'min' : m + 'min'
+  }
+})
+
+const estimatedCost = computed(() => {
+  const price = currentStation.value.currentSpotPrice || 0
+  const soc = currentStation.value.soc
+  const capacity = currentStation.value.capacity || 50
+  if (pendingOperation.value === 'charge') {
+    const mwh = ((100 - soc) / 100) * capacity
+    return '$' + Math.round(price * mwh / 1000)
+  } else {
+    const mwh = (soc / 100) * capacity
+    return '$' + Math.round(price * mwh / 1000)
+  }
+})
+
 // 是否可以停止（充电或放电中才能停）
 const canStop = computed(() => {
   const status = currentStation.value.runStatus
@@ -1058,44 +1101,88 @@ function toggleEditMode() {
   background: #ee3344;
 }
 
-/* === 操作确认弹窗 === */
-.operation-confirm-modal {
-  max-width: 400px;
+/* === 操作确认弹窗 (v2 style 2x2 grid) === */
+.op-confirm-modal {
+  background: #1a1f2e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 28px 32px;
+  max-width: 440px;
+  width: 90%;
 }
 
-.operation-info {
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 10px;
-  padding: 12px 16px;
-  margin-bottom: 12px;
-}
-
-.op-info-row {
+.op-confirm-header {
   display: flex;
-  justify-content: space-between;
-  padding: 6px 0;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
 }
 
-.op-info-row + .op-info-row {
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+.op-confirm-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
 }
 
-.op-info-label {
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 13px;
+.op-confirm-icon-wrap.charge {
+  background: linear-gradient(145deg, rgba(0, 255, 136, 0.15), rgba(0, 255, 136, 0.05));
+  box-shadow: 0 4px 12px rgba(0, 255, 136, 0.15);
 }
 
-.op-info-value {
+.op-confirm-icon-wrap.discharge {
+  background: linear-gradient(145deg, rgba(255, 215, 0, 0.15), rgba(255, 215, 0, 0.05));
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.15);
+}
+
+.op-confirm-title {
   color: #fff;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
 }
 
-.op-warning {
-  color: rgba(255, 255, 255, 0.5);
+.op-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.op-info-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.op-card-label {
   font-size: 12px;
-  margin: 0 0 20px 0;
-  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 6px;
+}
+
+.op-card-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.op-card-value.charge {
+  color: var(--color-primary);
+}
+
+.op-card-value.discharge {
+  color: #ffc107;
+}
+
+.op-confirm-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
 }
 
 .btn-confirm-op {
