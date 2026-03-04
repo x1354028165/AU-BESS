@@ -19,6 +19,12 @@
           >
             {{ i18n.t(currentStation.runStatus) }}
           </span>
+          <span
+            v-else-if="isAutoMode"
+            class="title-status-badge status-standby"
+          >
+            {{ i18n.t('standby') }}
+          </span>
         </h3>
         <div class="auto-toggle">
           <span class="auto-label">{{ i18n.t('auto') }}</span>
@@ -620,6 +626,12 @@ function saveSettings() {
   border: 1px solid rgba(0, 255, 136, 0.3);
 }
 
+.title-status-badge.status-standby {
+  background: rgba(100, 160, 220, 0.15);
+  color: #6aa4dc;
+  border: 1px solid rgba(100, 160, 220, 0.3);
+}
+
 .title-status-badge.status-discharging {
   background: rgba(255, 199, 7, 0.15);
   color: #ffc107;
@@ -787,8 +799,9 @@ function saveSettings() {
 }
 
 .price-circle.price-idle {
-  background: radial-gradient(circle, #4a90e2, #2c5aa0);
-  box-shadow: 0 0 30px rgba(74, 144, 226, 0.4), 0 0 60px rgba(74, 144, 226, 0.15);
+  background: radial-gradient(circle, #2a3a4e, #1a2536);
+  box-shadow: 0 0 20px rgba(100, 140, 180, 0.15), 0 0 40px rgba(60, 100, 140, 0.08);
+  border: 1px solid rgba(100, 160, 220, 0.2);
 }
 
 .price-circle.price-charging {
