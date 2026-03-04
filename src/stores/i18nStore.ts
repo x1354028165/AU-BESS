@@ -117,6 +117,13 @@ const messages: Record<string, Record<Locale, string>> = {
   cumulative: { en: 'Cumulative', zh: '累计' },
 
   // Header UI
+  confirmCharge: { en: 'Confirm Charge Operation', zh: '确认充电操作' },
+  confirmDischarge: { en: 'Confirm Discharge Operation', zh: '确认放电操作' },
+  chargeWarning: { en: 'Will start charging from grid. This will consume grid power.', zh: '即将开始从电网充电，此操作将消耗电网电力。' },
+  dischargeWarning: { en: 'Will start discharging to grid for revenue.', zh: '即将向电网放电以获取收益。' },
+  startCharge: { en: 'Start Charge', zh: '开始充电' },
+  startDischarge: { en: 'Start Discharge', zh: '开始放电' },
+  station: { en: 'Station', zh: '电站' },
   confirmStop: { en: 'Confirm Stop', zh: '确认停止' },
   confirmStopDesc: { en: 'Are you sure you want to stop the current operation?', zh: '确定要停止当前操作吗？' },
   confirmStopBtn: { en: 'Stop Now', zh: '立即停止' },

@@ -198,6 +198,47 @@
       </div>
     </Transition>
   </Teleport>
+
+  <!-- 充放电操作确认弹窗 -->
+  <Teleport to="body">
+    <Transition name="fade">
+      <div v-if="showOperationConfirm" class="stop-confirm-overlay" @click.self="showOperationConfirm = false">
+        <div class="stop-confirm-modal operation-confirm-modal">
+          <div class="stop-confirm-icon">{{ pendingOperation === 'charge' ? '⚡' : '🔋' }}</div>
+          <h3 :style="{ color: pendingOperation === 'charge' ? 'var(--color-primary)' : '#ffc107' }">
+            {{ pendingOperation === 'charge' ? i18n.t('confirmCharge') : i18n.t('confirmDischarge') }}
+          </h3>
+          <div class="operation-info">
+            <div class="op-info-row">
+              <span class="op-info-label">{{ i18n.t('station') }}</span>
+              <span class="op-info-value">{{ currentStation.name }}</span>
+            </div>
+            <div class="op-info-row">
+              <span class="op-info-label">{{ i18n.t('currentSpotPrice') }}</span>
+              <span class="op-info-value">${{ currentStation.currentSpotPrice?.toFixed(2) }}/MWh</span>
+            </div>
+            <div class="op-info-row">
+              <span class="op-info-label">SOC</span>
+              <span class="op-info-value">{{ currentStation.soc }}%</span>
+            </div>
+          </div>
+          <p class="op-warning">
+            {{ pendingOperation === 'charge' ? i18n.t('chargeWarning') : i18n.t('dischargeWarning') }}
+          </p>
+          <div class="stop-confirm-actions">
+            <button class="btn-cancel" @click="showOperationConfirm = false">{{ i18n.t('cancel') }}</button>
+            <button
+              class="btn-confirm-op"
+              :class="pendingOperation === 'charge' ? 'btn-charge' : 'btn-discharge'"
+              @click="confirmOperation"
+            >
+              {{ pendingOperation === 'charge' ? i18n.t('startCharge') : i18n.t('startDischarge') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -228,7 +269,9 @@ const stations = allStations.map(s => ({
 const selectedStationId = ref(stations[0].id)
 const isAutoMode = ref(true)
 const showStopOverlay = ref(false)
-const showStopConfirm = ref(false) // 默认Auto
+const showStopConfirm = ref(false)
+const showOperationConfirm = ref(false)
+const pendingOperation = ref<'charge' | 'discharge'>('charge') // 默认Auto
 const currentStrategy = ref('ai-bidding')
 
 // 每个电站的可变运行状态（独立于base数据）
@@ -276,7 +319,7 @@ const priceCircleClass = computed(() => {
 // 是否可以停止（充电或放电中才能停）
 const canStop = computed(() => {
   const status = currentStation.value.runStatus
-  return !isAutoMode.value && (status === 'charging' || status === 'discharging')
+  return status === 'charging' || status === 'discharging'
 })
 
 const socColorClass = computed(() => {
@@ -299,32 +342,28 @@ function handleCharge() {
   if (isAutoMode.value) return
   const state = stationStates[selectedStationId.value]
   if (!state) return
-
-  if (state.runStatus === 'charging') {
-    // 再次点击 = 停止
-    state.runStatus = 'idle'
-  } else if (state.runStatus === 'discharging') {
-    // 正在放电时不能直接切充电（参考v2逻辑）
-    return
-  } else {
-    state.runStatus = 'charging'
-  }
+  if (state.runStatus === 'discharging') return // 互斥
+  // 弹出确认弹窗
+  pendingOperation.value = 'charge'
+  showOperationConfirm.value = true
 }
 
 function handleDischarge() {
   if (isAutoMode.value) return
   const state = stationStates[selectedStationId.value]
   if (!state) return
+  if (state.runStatus === 'charging') return // 互斥
+  // 弹出确认弹窗
+  pendingOperation.value = 'discharge'
+  showOperationConfirm.value = true
+}
 
-  if (state.runStatus === 'discharging') {
-    // 再次点击 = 停止
-    state.runStatus = 'idle'
-  } else if (state.runStatus === 'charging') {
-    // 正在充电时不能直接切放电（参考v2逻辑）
-    return
-  } else {
-    state.runStatus = 'discharging'
+function confirmOperation() {
+  const state = stationStates[selectedStationId.value]
+  if (state) {
+    state.runStatus = pendingOperation.value === 'charge' ? 'charging' : 'discharging'
   }
+  showOperationConfirm.value = false
 }
 
 // === Settings区 ===
@@ -1017,6 +1056,73 @@ function toggleEditMode() {
 
 .btn-confirm-stop:hover {
   background: #ee3344;
+}
+
+/* === 操作确认弹窗 === */
+.operation-confirm-modal {
+  max-width: 400px;
+}
+
+.operation-info {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+}
+
+.op-info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+}
+
+.op-info-row + .op-info-row {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.op-info-label {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 13px;
+}
+
+.op-info-value {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.op-warning {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  margin: 0 0 20px 0;
+  line-height: 1.5;
+}
+
+.btn-confirm-op {
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.btn-confirm-op.btn-charge {
+  background: var(--color-primary);
+}
+
+.btn-confirm-op.btn-charge:hover {
+  background: #00cc6a;
+}
+
+.btn-confirm-op.btn-discharge {
+  background: #ffc107;
+  color: #1a1f2e;
+}
+
+.btn-confirm-op.btn-discharge:hover {
+  background: #e6ac00;
 }
 
 /* === Settings分割线 === */
