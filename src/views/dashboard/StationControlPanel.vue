@@ -264,7 +264,7 @@
         <div class="settings-modal">
           <div class="settings-modal-header">
             <h2>{{ i18n.t("settingsTitle") }}</h2>
-            <span class="settings-station-tag">{{ currentStation.region || 'SA' }}</span>
+
             <button class="settings-close-btn" @click="closeSettings">✕</button>
           </div>
 
@@ -313,20 +313,30 @@
             </div>
 
             <div class="time-settings-row">
+              <!-- 充电时段（多个） -->
               <div class="time-setting-item">
-                <label class="time-setting-label charge-label">{{ i18n.t("autoChargeLabel") }}</label>
-                <div class="time-inputs">
-                  <input type="time" v-model="editChargeStart" class="time-input-field" />
+                <div class="time-setting-header">
+                  <label class="time-setting-label charge-label">{{ i18n.t('autoChargeLabel') }}</label>
+                  <button class="add-period-btn charge-add" @click="addChargePeriod">+ {{ i18n.t('add') }}</button>
+                </div>
+                <div v-for="(p, idx) in editChargePeriods" :key="'c'+idx" class="period-row">
+                  <input type="time" v-model="p.start" class="time-input-field" />
                   <span class="time-dash">-</span>
-                  <input type="time" v-model="editChargeEnd" class="time-input-field" />
+                  <input type="time" v-model="p.end" class="time-input-field" />
+                  <button v-if="editChargePeriods.length > 1" class="del-period-btn" @click="editChargePeriods.splice(idx, 1)">✕</button>
                 </div>
               </div>
+              <!-- 放电时段（多个） -->
               <div class="time-setting-item">
-                <label class="time-setting-label discharge-label">{{ i18n.t("autoDischargeLabel") }}</label>
-                <div class="time-inputs">
-                  <input type="time" v-model="editDischargeStart" class="time-input-field" />
+                <div class="time-setting-header">
+                  <label class="time-setting-label discharge-label">{{ i18n.t('autoDischargeLabel') }}</label>
+                  <button class="add-period-btn discharge-add" @click="addDischargePeriod">+ {{ i18n.t('add') }}</button>
+                </div>
+                <div v-for="(p, idx) in editDischargePeriods" :key="'d'+idx" class="period-row">
+                  <input type="time" v-model="p.start" class="time-input-field" />
                   <span class="time-dash">-</span>
-                  <input type="time" v-model="editDischargeEnd" class="time-input-field" />
+                  <input type="time" v-model="p.end" class="time-input-field" />
+                  <button v-if="editDischargePeriods.length > 1" class="del-period-btn" @click="editDischargePeriods.splice(idx, 1)">✕</button>
                 </div>
               </div>
             </div>
@@ -430,10 +440,15 @@ const showSettingsModal = ref(false)
 const showConflictAlert = ref(false)
 const editChargeSOC = ref(75)
 const editDischargeSOC = ref(30)
-const editChargeStart = ref('09:00')
-const editChargeEnd = ref('13:00')
-const editDischargeStart = ref('17:00')
-const editDischargeEnd = ref('21:00')
+const editChargePeriods = ref([{ start: '09:00', end: '13:00' }])
+const editDischargePeriods = ref([{ start: '17:00', end: '21:00' }])
+
+function addChargePeriod() {
+  editChargePeriods.value.push({ start: '00:00', end: '01:00' })
+}
+function addDischargePeriod() {
+  editDischargePeriods.value.push({ start: '00:00', end: '01:00' })
+}
 const pendingOperation = ref<'charge' | 'discharge'>('charge') // 默认Auto
 
 // 每个电站的可变运行状态（独立于base数据）
@@ -583,14 +598,14 @@ function handleDischarge() {
 
 // 24h 时间轴样式计算
 const timelineChargeStyle = computed(() => {
-  const start = timeToPercent(editChargeStart.value)
-  const end = timeToPercent(editChargeEnd.value)
+  const start = timeToPercent(editChargePeriods.value[0]?.start || '09:00')
+  const end = timeToPercent(editChargePeriods.value[0]?.end || '13:00')
   return { left: start + '%', width: (end - start) + '%' }
 })
 
 const timelineDischargeStyle = computed(() => {
-  const start = timeToPercent(editDischargeStart.value)
-  const end = timeToPercent(editDischargeEnd.value)
+  const start = timeToPercent(editDischargePeriods.value[0]?.start || '17:00')
+  const end = timeToPercent(editDischargePeriods.value[0]?.end || '21:00')
   return { left: start + '%', width: (end - start) + '%' }
 })
 
@@ -634,10 +649,8 @@ function toggleEditMode() {
   // 打开Settings弹窗 (v2风格)
   editChargeSOC.value = chargeStopSOC.value
   editDischargeSOC.value = dischargeStopSOC.value
-  editChargeStart.value = autoChargeStart.value
-  editChargeEnd.value = autoChargeEnd.value
-  editDischargeStart.value = autoDischargeStart.value
-  editDischargeEnd.value = autoDischargeEnd.value
+  editChargePeriods.value = [{ start: autoChargeStart.value, end: autoChargeEnd.value }]
+  editDischargePeriods.value = [{ start: autoDischargeStart.value, end: autoDischargeEnd.value }]
   showSettingsModal.value = true
 }
 
@@ -648,10 +661,8 @@ function closeSettings() {
 function saveSettings() {
   chargeStopSOC.value = editChargeSOC.value
   dischargeStopSOC.value = editDischargeSOC.value
-  autoChargeStart.value = editChargeStart.value
-  autoChargeEnd.value = editChargeEnd.value
-  autoDischargeStart.value = editDischargeStart.value
-  autoDischargeEnd.value = editDischargeEnd.value
+  if (editChargePeriods.value.length > 0) { autoChargeStart.value = editChargePeriods.value[0].start; autoChargeEnd.value = editChargePeriods.value[0].end }
+  if (editDischargePeriods.value.length > 0) { autoDischargeStart.value = editDischargePeriods.value[0].start; autoDischargeEnd.value = editDischargePeriods.value[0].end }
   showSettingsModal.value = false
 }
 </script>
@@ -2178,6 +2189,56 @@ function saveSettings() {
 
 .btn-edit-settings:hover {
   background: rgba(255, 255, 255, 0.12);
+}
+
+
+/* === 多时段增删 === */
+.time-setting-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.add-period-btn {
+  background: transparent;
+  border: 1px dashed rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.7);
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.add-period-btn.charge-add {
+  border-color: rgba(0, 255, 136, 0.4);
+  color: #00ff88;
+}
+
+.add-period-btn.discharge-add {
+  border-color: rgba(255, 193, 7, 0.4);
+  color: #ffc107;
+}
+
+.period-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.del-period-btn {
+  background: transparent;
+  border: none;
+  color: #ff6b6b;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+}
+
+.del-period-btn:hover {
+  background: rgba(255, 107, 107, 0.1);
 }
 
 </style>

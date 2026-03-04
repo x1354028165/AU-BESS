@@ -149,6 +149,7 @@ const messages: Record<string, Record<Locale, string>> = {
   socSettings: { en: 'SOC Settings', zh: 'SOC 设置' },
   timeConditionSettings: { en: 'Time Condition Settings', zh: '分时段策略' },
   settingsHint: { en: 'Set charge and discharge time windows. Periods cannot overlap — conflicts are detected automatically.', zh: '设置充电和放电的执行时间段。充电时间与放电时间不能重叠，保存时将自动检测冲突。' },
+  add: { en: 'Add', zh: '添加' },
   confirmCharge: { en: 'Confirm Charge Operation', zh: '确认充电操作' },
   confirmDischarge: { en: 'Confirm Discharge Operation', zh: '确认放电操作' },
   chargeWarning: { en: 'Will start charging from grid. This will consume grid power.', zh: '即将开始从电网充电，此操作将消耗电网电力。' },
