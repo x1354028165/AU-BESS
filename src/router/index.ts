@@ -51,7 +51,7 @@ const router = createRouter({
         {
           path: 'fault-alarm',
           name: 'fault-alarm',
-          component: () => import('../views/DashboardView.vue'), // temp reuse
+          component: () => import('../views/FaultAlarmView.vue'),
           meta: { title: 'navFaultAlarm', roles: ['owner', 'operator'] },
         },
         {
