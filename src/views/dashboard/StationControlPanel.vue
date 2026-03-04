@@ -211,7 +211,7 @@
       <div v-if="showSettingsModal" class="stop-confirm-overlay" @click.self="closeSettings">
         <div class="settings-modal">
           <div class="settings-modal-header">
-            <h2>Settings</h2>
+            <h2>{{ i18n.t("settingsTitle") }}</h2>
             <span class="settings-station-tag">{{ currentStation.region || 'SA' }}</span>
             <button class="settings-close-btn" @click="closeSettings">✕</button>
           </div>
@@ -228,7 +228,7 @@
                     <span>%</span>
                   </div>
                 </div>
-                <input type="range" v-model.number="editChargeSOC" min="0" max="100" class="soc-slider charge-slider full-width" />
+                <input type="range" v-model.number="editChargeSOC" min="0" max="100" class="soc-slider charge-slider full-width" :style="{'--val': editChargeSOC + '%'}" />
               </div>
               <div class="soc-setting-item">
                 <div class="soc-header-row">
@@ -238,7 +238,7 @@
                     <span>%</span>
                   </div>
                 </div>
-                <input type="range" v-model.number="editDischargeSOC" min="0" max="100" class="soc-slider discharge-slider full-width" />
+                <input type="range" v-model.number="editDischargeSOC" min="0" max="100" class="soc-slider discharge-slider full-width" :style="{'--val': editDischargeSOC + '%'}" />
               </div>
             </div>
           </div>
@@ -1759,6 +1759,30 @@ function saveSettings() {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+/* SOC Slider 绿/黄填充 (v2 parity) */
+.soc-slider.charge-slider {
+  accent-color: #00ff88;
+}
+.soc-slider.charge-slider::-webkit-slider-thumb {
+  background: #00ff88;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(0, 255, 136, 0.4);
+}
+.soc-slider.charge-slider::-webkit-slider-runnable-track {
+  background: linear-gradient(to right, #00ff88 0%, #00ff88 var(--val, 75%), rgba(255,255,255,0.1) var(--val, 75%));
+}
+.soc-slider.discharge-slider {
+  accent-color: #ffc107;
+}
+.soc-slider.discharge-slider::-webkit-slider-thumb {
+  background: #ffc107;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(255, 193, 7, 0.4);
+}
+.soc-slider.discharge-slider::-webkit-slider-runnable-track {
+  background: linear-gradient(to right, #ffc107 0%, #ffc107 var(--val, 30%), rgba(255,255,255,0.1) var(--val, 30%));
 }
 
 .soc-slider.full-width {

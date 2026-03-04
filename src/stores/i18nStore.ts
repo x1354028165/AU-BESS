@@ -131,6 +131,7 @@ const messages: Record<string, Record<Locale, string>> = {
   dischargeStopSOCLabel: { en: 'Discharge Stop SOC', zh: '放电停止SOC' },
   autoChargeLabel: { en: 'Auto Charge', zh: '自动充电条件' },
   autoDischargeLabel: { en: 'Auto Discharge', zh: '自动放电条件' },
+  settingsTitle: { en: 'Settings', zh: '设置' },
   confirmCharge: { en: 'Confirm Charge Operation', zh: '确认充电操作' },
   confirmDischarge: { en: 'Confirm Discharge Operation', zh: '确认放电操作' },
   chargeWarning: { en: 'Will start charging from grid. This will consume grid power.', zh: '即将开始从电网充电，此操作将消耗电网电力。' },
