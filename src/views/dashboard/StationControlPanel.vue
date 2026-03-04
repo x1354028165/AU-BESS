@@ -10,7 +10,16 @@
     <div class="control-panel">
       <!-- Header: 标题 + Auto开关 -->
       <div class="panel-header">
-        <h3 class="panel-title">{{ i18n.t('stationManagement') }}</h3>
+        <h3 class="panel-title">
+          {{ i18n.t('stationManagement') }}
+          <span
+            v-if="currentStation.runStatus !== 'idle'"
+            class="title-status-badge"
+            :class="'status-' + currentStation.runStatus"
+          >
+            {{ i18n.t(currentStation.runStatus) }}
+          </span>
+        </h3>
         <div class="auto-toggle">
           <span class="auto-label">{{ i18n.t('auto') }}</span>
           <div
@@ -29,7 +38,8 @@
     <div class="control-center">
       <button
         class="action-btn charge-btn"
-        :disabled="isAutoMode || currentStation.runStatus === 'discharging'"
+        v-show="currentStation.runStatus !== 'charging' && currentStation.runStatus !== 'discharging'"
+        :disabled="isAutoMode"
         @click="handleCharge"
       >
         {{ i18n.t('charge') }}
@@ -58,7 +68,8 @@
 
       <button
         class="action-btn discharge-btn"
-        :disabled="isAutoMode || currentStation.runStatus === 'charging'"
+        v-show="currentStation.runStatus !== 'charging' && currentStation.runStatus !== 'discharging'"
+        :disabled="isAutoMode"
         @click="handleDischarge"
       >
         {{ i18n.t('discharge') }}
@@ -82,9 +93,7 @@
         </div>
         <div class="battery-terminal"></div>
       </div>
-      <span class="status-badge" :class="'status-' + currentStation.runStatus">
-        {{ i18n.t(currentStation.runStatus) }}
-      </span>
+
     </div>
 
     <!-- 策略区 -->
@@ -360,6 +369,30 @@ function toggleEditMode() {
 }
 
 /* === Header === */
+
+.title-status-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-left: 10px;
+  vertical-align: middle;
+  letter-spacing: 0.5px;
+}
+
+.title-status-badge.status-charging {
+  background: rgba(0, 255, 136, 0.15);
+  color: var(--color-primary);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+.title-status-badge.status-discharging {
+  background: rgba(255, 199, 7, 0.15);
+  color: #ffc107;
+  border: 1px solid rgba(255, 199, 7, 0.3);
+}
+
 .panel-header {
   display: flex;
   align-items: center;
