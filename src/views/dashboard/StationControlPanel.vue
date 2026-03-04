@@ -169,6 +169,28 @@
     </Transition>
   </Teleport>
 
+  <!-- 冲突提示弹窗 -->
+  <Teleport to="body">
+    <Transition name="fade">
+      <div v-if="showConflictAlert" class="stop-confirm-overlay" @click.self="showConflictAlert = false">
+        <div class="op-confirm-modal">
+          <div class="op-confirm-header">
+            <div class="op-confirm-icon-wrap" style="background: rgba(255,59,48,0.12); box-shadow: 0 4px 12px rgba(255,59,48,0.15);">
+              <span>⚠️</span>
+            </div>
+            <h3 class="op-confirm-title">{{ i18n.t('conflictTitle') }}</h3>
+          </div>
+          <p style="color: rgba(255,255,255,0.6); font-size: 13px; line-height: 1.6; margin: 0 0 20px;">
+            {{ i18n.t('conflictMsg') }}
+          </p>
+          <div class="op-confirm-actions" style="justify-content: flex-end;">
+            <button class="btn-confirm-op charge" @click="showConflictAlert = false">OK</button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
+
   <!-- Settings 设置弹窗 (v2风格全屏modal) -->
   <Teleport to="body">
     <Transition name="fade">
@@ -339,6 +361,7 @@ const showStopOverlay = ref(false)
 const showStopConfirm = ref(false)
 const showOperationConfirm = ref(false)
 const showSettingsModal = ref(false)
+const showConflictAlert = ref(false)
 const editChargeSOC = ref(75)
 const editDischargeSOC = ref(30)
 const editChargeStart = ref('09:00')
@@ -436,9 +459,17 @@ const socColorClass = computed(() => {
 // === 状态机交互 ===
 
 function toggleAutoMode() {
-  isAutoMode.value = !isAutoMode.value
-  if (isAutoMode.value) {
+  const state = stationStates[selectedStationId.value]
+
+  // Patch 1: 手动运行中→开Auto → 拦截
+  if (!isAutoMode.value && state && (state.runStatus === 'charging' || state.runStatus === 'discharging')) {
+    showConflictAlert.value = true
+    return // 不切换
   }
+
+  // Patch 2: Auto关闭→保持当前状态（平滑过渡）
+  // 不重置runStatus，让操作员手动STOP
+  isAutoMode.value = !isAutoMode.value
 }
 
 function handleCharge() {
