@@ -193,6 +193,9 @@ function handleLogout() {
 
 /* Content wrapper */
 .content-wrapper {
+  width: 100% !important;
+  max-width: 100% !important;
+  align-items: stretch !important;
   position: relative;
   z-index: 2;
   min-height: 100vh;
