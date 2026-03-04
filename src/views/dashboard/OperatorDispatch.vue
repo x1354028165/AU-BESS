@@ -1,53 +1,7 @@
 <template>
   <div class="operator-page">
-    <!-- === 顶部指标卡片 === -->
-    <section class="op-metric-cards">
-      <div class="op-metric-card">
-        <div class="op-metric-icon icon-charge">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M5 18H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3.19M15 6h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-3.19" />
-            <line x1="23" y1="13" x2="23" y2="11" />
-            <polyline points="11 6 7 12 13 12 9 18" />
-          </svg>
-        </div>
-        <div class="op-metric-body">
-          <span class="op-metric-label">{{ i18n.t('todayCharge') }}</span>
-          <span class="op-metric-value">{{ totalCharge.toFixed(2) }}<small>MWh</small></span>
-          <span class="op-metric-sub">{{ i18n.t('cost') }}: ${{ Math.abs(totalChargeCost).toFixed(0) }}</span>
-        </div>
-      </div>
-
-      <div class="op-metric-card">
-        <div class="op-metric-icon icon-discharge">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-          </svg>
-        </div>
-        <div class="op-metric-body">
-          <span class="op-metric-label">{{ i18n.t('todayDischarge') }}</span>
-          <span class="op-metric-value">{{ totalDischarge.toFixed(2) }}<small>MWh</small></span>
-          <span class="op-metric-sub">{{ i18n.t('revenue') }}: ${{ totalDischargeRevenue.toFixed(0) }}</span>
-        </div>
-      </div>
-
-      <div class="op-metric-card">
-        <div class="op-metric-icon" :class="netProfitTotal >= 0 ? 'icon-profit' : 'icon-loss'">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="1" x2="12" y2="23" />
-            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-          </svg>
-        </div>
-        <div class="op-metric-body">
-          <span class="op-metric-label">{{ i18n.t('netProfit') }}</span>
-          <span class="op-metric-value" :class="netProfitTotal >= 0 ? 'val-positive' : 'val-negative'">
-            {{ netProfitTotal >= 0 ? '+' : '' }}${{ netProfitTotal.toFixed(0) }}
-          </span>
-          <span class="op-metric-sub" :class="vsYesterday >= 0 ? 'val-positive' : 'val-negative'">
-            {{ vsYesterday >= 0 ? '▲' : '▼' }} {{ Math.abs(vsYesterday).toFixed(1) }}% {{ i18n.t('vsYesterday') }}
-          </span>
-        </div>
-      </div>
-    </section>
+    <!-- === 电站调度控制面板 === -->
+    <StationControlPanel />
 
     <!-- === Market 图表 === -->
     <section class="chart-section">
@@ -69,6 +23,7 @@ import * as echarts from 'echarts'
 import { useI18nStore } from '@/stores/i18nStore'
 import { getOperatorChartData } from '@/mock/dashboard'
 import type { OperatorChartData } from '@/mock/dashboard'
+import StationControlPanel from './StationControlPanel.vue'
 
 const i18n = useI18nStore()
 
@@ -83,7 +38,7 @@ const powerProfitChartRef = ref<HTMLElement | null>(null)
 const marketChart = shallowRef<echarts.ECharts | null>(null)
 const powerProfitChart = shallowRef<echarts.ECharts | null>(null)
 
-// === 计算属性 ===
+// === 计算属性（保留用于图表 tooltip 等潜在需求） ===
 const totalCharge = computed(() =>
   chartData.value.powerProfit.reduce((sum, d) => sum + Math.abs(d.chargeEnergy), 0)
 )
@@ -451,109 +406,6 @@ onUnmounted(() => {
   animation: pageFadeIn 0.3s ease-out;
 }
 
-/* === 指标卡片 === */
-.op-metric-cards {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-}
-
-.op-metric-card {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 20px;
-  background: var(--bg-card);
-  backdrop-filter: blur(10px);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
-  transition: all var(--transition-normal);
-}
-
-.op-metric-card:hover {
-  background: var(--bg-card-hover);
-  border-color: var(--border-hover);
-  box-shadow: var(--shadow-elevated);
-}
-
-.op-metric-icon {
-  flex-shrink: 0;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.op-metric-icon svg {
-  width: 22px;
-  height: 22px;
-}
-
-.icon-charge {
-  background: rgba(0, 255, 136, 0.12);
-  color: var(--color-primary);
-}
-
-.icon-discharge {
-  background: rgba(255, 193, 7, 0.12);
-  color: #ffc107;
-}
-
-.icon-profit {
-  background: rgba(0, 255, 136, 0.12);
-  color: var(--color-primary);
-}
-
-.icon-loss {
-  background: rgba(255, 71, 87, 0.12);
-  color: #ff4757;
-}
-
-.op-metric-body {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.op-metric-label {
-  font-size: 12px;
-  color: var(--text-tertiary);
-  font-weight: 500;
-  letter-spacing: 0.5px;
-}
-
-.op-metric-value {
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--text-primary);
-  font-family: var(--font-mono);
-  white-space: nowrap;
-}
-
-.op-metric-value small {
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--text-tertiary);
-  margin-left: 4px;
-}
-
-.op-metric-sub {
-  font-size: 12px;
-  color: var(--text-tertiary);
-  font-family: var(--font-mono);
-}
-
-.val-positive {
-  color: var(--color-primary);
-}
-
-.val-negative {
-  color: #ff4757;
-}
-
 /* === 图表区域 === */
 .chart-section {
   background: var(--bg-card);
@@ -576,10 +428,6 @@ onUnmounted(() => {
 
 /* === 响应式 === */
 @media (max-width: 768px) {
-  .op-metric-cards {
-    grid-template-columns: 1fr;
-  }
-
   .chart-container {
     height: 300px;
   }

@@ -78,6 +78,17 @@ const messages: Record<string, Record<Locale, string>> = {
   owner: { en: 'Owner', zh: '业主' },
   operator: { en: 'Operator', zh: '运维方' },
 
+  // Station Control Panel
+  stationManagement: { en: 'Station Management', zh: '电站管理' },
+  auto: { en: 'Auto', zh: '自动' },
+  manual: { en: 'Manual', zh: '手动' },
+  charge: { en: 'Charge', zh: '充电' },
+  discharge: { en: 'Discharge', zh: '放电' },
+  spotPriceLabel: { en: 'Spot Price ($/MWh)', zh: '现货价格 ($/MWh)' },
+  strategy: { en: 'Strategy', zh: '策略' },
+  runMode: { en: 'Run Mode', zh: '运行模式' },
+  stop: { en: 'STOP', zh: '停止' },
+
   // Header UI
   settings: { en: 'Settings', zh: '设置' },
   logout: { en: 'Logout', zh: '退出' },
