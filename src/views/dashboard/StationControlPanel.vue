@@ -96,25 +96,7 @@
 
     </div>
 
-    <!-- 策略区 -->
-    <div class="strategy-section">
-      <div class="strategy-row">
-        <span class="strategy-label">{{ i18n.t('strategy') }}</span>
-        <select
-          v-model="currentStrategy"
-          class="strategy-select"
-          :disabled="isAutoMode"
-        >
-          <option value="rule-based">Rule-based</option>
-          <option value="ai-bidding">AI Bidding</option>
-          <option value="manual">Manual</option>
-        </select>
-      </div>
-      <div class="strategy-row">
-        <span class="strategy-label">{{ i18n.t('runMode') }}</span>
-        <span class="strategy-value">{{ i18n.tRunMode(currentStation.runMode) }}</span>
-      </div>
-    </div>
+
 
     <!-- === Settings区 === -->
     <div class="settings-section">
@@ -284,7 +266,6 @@ const showStopOverlay = ref(false)
 const showStopConfirm = ref(false)
 const showOperationConfirm = ref(false)
 const pendingOperation = ref<'charge' | 'discharge'>('charge') // 默认Auto
-const currentStrategy = ref('ai-bidding')
 
 // 每个电站的可变运行状态（独立于base数据）
 const stationStates = reactive<Record<string, { runStatus: string; soc: number }>>(
@@ -377,7 +358,6 @@ const socColorClass = computed(() => {
 function toggleAutoMode() {
   isAutoMode.value = !isAutoMode.value
   if (isAutoMode.value) {
-    currentStrategy.value = 'ai-bidding'
   }
 }
 
