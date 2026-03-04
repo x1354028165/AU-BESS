@@ -113,12 +113,28 @@
         </button>
       </div>
 
-      <!-- 充电/放电参数 纯文字 -->
+      <!-- SOC阈值 纯文字 -->
       <div class="param-grid">
         <div class="param-line"><span class="param-label">{{ i18n.t('chargeStopSOCLabel') }}</span> <span class="charge-val">⚡ {{ chargeStopSOC }}%</span></div>
         <div class="param-line"><span class="param-label">{{ i18n.t('dischargeStopSOCLabel') }}</span> <span class="discharge-val">🔋 {{ dischargeStopSOC }}%</span></div>
-        <div class="param-line"><span class="param-label">{{ i18n.t('autoChargeLabel') }}</span> <span class="charge-val">⚡ {{ autoChargeStart }}-{{ autoChargeEnd }}</span></div>
-        <div class="param-line"><span class="param-label">{{ i18n.t('autoDischargeLabel') }}</span> <span class="discharge-val">🔋 {{ autoDischargeStart }}-{{ autoDischargeEnd }}</span></div>
+      </div>
+
+      <!-- Auto时段 保持卡片样式 -->
+      <div class="auto-schedule-grid">
+        <div class="schedule-card charge-schedule">
+          <span class="schedule-icon">⚡</span>
+          <div class="schedule-detail">
+            <span class="schedule-label">{{ i18n.t('autoChargeLabel') }}</span>
+            <span class="schedule-time">{{ autoChargeStart }}-{{ autoChargeEnd }}</span>
+          </div>
+        </div>
+        <div class="schedule-card discharge-schedule">
+          <span class="schedule-icon">🔋</span>
+          <div class="schedule-detail">
+            <span class="schedule-label">{{ i18n.t('autoDischargeLabel') }}</span>
+            <span class="schedule-time">{{ autoDischargeStart }}-{{ autoDischargeEnd }}</span>
+          </div>
+        </div>
       </div>
     </div>
     </div><!-- .control-panel -->
@@ -1456,6 +1472,44 @@ function saveSettings() {
   color: #ffc107;
   font-weight: 700;
 }
+
+
+/* === Auto时段卡片 === */
+.auto-schedule-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.schedule-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+}
+
+.schedule-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.schedule-label {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.schedule-icon { font-size: 14px; }
+
+.schedule-time { font-size: 13px; font-weight: 700; }
+.charge-schedule .schedule-time { color: var(--color-primary); }
+.discharge-schedule .schedule-time { color: #ffc107; }
 
 </style>
 <style>
