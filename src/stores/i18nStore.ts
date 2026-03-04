@@ -101,6 +101,12 @@ const messages: Record<string, Record<Locale, string>> = {
   market: { en: 'Market', zh: '行情' },
   autoPreview: { en: 'Auto Preview', zh: '自动预览' },
   comingSoon: { en: 'Coming Soon', zh: '即将上线' },
+  estChargeCost: { en: 'Est. Charge Cost', zh: '预计充电成本' },
+  estSellRevenue: { en: 'Est. Sell Revenue', zh: '预计卖电收益' },
+  estNetProfit: { en: 'Est. Net Profit', zh: '预计净利润' },
+  aiPredictedPrice: { en: 'AI Predicted Price', zh: 'AI预测价格' },
+  chargeWindow: { en: 'Charge Window', zh: '充电窗口' },
+  dischargeWindow: { en: 'Discharge Window', zh: '放电窗口' },
 
   // Market metric cards
   currentSpotPrice: { en: 'Current Spot Price', zh: '当前现货价格' },

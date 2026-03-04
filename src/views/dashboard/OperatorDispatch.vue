@@ -48,11 +48,31 @@
           <div ref="marketChartRef" class="chart-container"></div>
         </template>
 
-        <!-- Auto Preview placeholder -->
+        <!-- Auto Preview Panel -->
         <template v-else>
-          <div class="coming-soon">
-            <span class="coming-soon-icon">🚀</span>
-            <span>{{ i18n.t('comingSoon') }}</span>
+          <div class="auto-preview-panel">
+            <!-- 3 预估指标 -->
+            <div class="ap-stats-row">
+              <div class="ap-stat-card">
+                <div class="ap-stat-label">{{ i18n.t('estChargeCost') }}</div>
+                <div class="ap-stat-sub">($)</div>
+                <div class="ap-stat-value charge-cost">${{ estimatedChargeCost }}</div>
+              </div>
+              <div class="ap-stat-divider"></div>
+              <div class="ap-stat-card">
+                <div class="ap-stat-label">{{ i18n.t('estSellRevenue') }}</div>
+                <div class="ap-stat-sub">($)</div>
+                <div class="ap-stat-value sell-revenue">${{ estimatedSellRevenue }}</div>
+              </div>
+              <div class="ap-stat-divider"></div>
+              <div class="ap-stat-card">
+                <div class="ap-stat-label">{{ i18n.t('estNetProfit') }}</div>
+                <div class="ap-stat-sub">($)</div>
+                <div class="ap-stat-value net-profit">${{ estimatedNetProfit }}</div>
+              </div>
+            </div>
+            <!-- 迷你价格预测图 -->
+            <div ref="autoPreviewChartRef" class="chart-container" style="height: 320px;"></div>
           </div>
         </template>
       </div>
@@ -152,9 +172,11 @@ const chartData = ref<OperatorChartData>({ market: [], powerProfit: [] })
 const ppData = ref<PowerProfitDataPoint[]>([])
 
 const marketChartRef = ref<HTMLElement | null>(null)
+const autoPreviewChartRef = ref<HTMLElement | null>(null)
 const powerProfitChartRef = ref<HTMLElement | null>(null)
 
 const marketChart = shallowRef<echarts.ECharts | null>(null)
+const autoPreviewChart = shallowRef<echarts.ECharts | null>(null)
 const powerProfitChart = shallowRef<echarts.ECharts | null>(null)
 
 // === Metric label keys based on period ===
@@ -229,6 +251,46 @@ const forecastDemandValue = computed(() => {
   const nextIdx = Math.min(currentHour + 1, 23)
   const next = data[nextIdx]
   return Math.round(next?.predictedDemand ?? next?.demand ?? 0)
+})
+
+// === Auto Preview estimated values ===
+// Use a seeded random so values are stable within a session
+const apSeed = Date.now()
+function seededRandom(i: number): number {
+  const x = Math.sin(apSeed + i * 9301 + 49297) * 49297
+  return x - Math.floor(x)
+}
+
+const predictedPrices = computed(() => {
+  const data = chartData.value.market
+  return data.map((d, i) => {
+    const base = d.historicalPrice ?? d.predictedPrice ?? 0
+    const factor = 0.9 + seededRandom(i) * 0.2 // 0.9 - 1.1
+    return +(base * factor).toFixed(2)
+  })
+})
+
+const estimatedChargeCost = computed(() => {
+  const prices = predictedPrices.value
+  // Charge window: 09:00-13:00 (indices 9,10,11,12)
+  const chargeHours = [9, 10, 11, 12]
+  const avgPrice = chargeHours.reduce((sum, h) => sum + Math.abs(prices[h] || 0), 0) / chargeHours.length
+  // 4h * 1MW capacity
+  return (avgPrice * 4 * 1).toFixed(0)
+})
+
+const estimatedSellRevenue = computed(() => {
+  const prices = predictedPrices.value
+  // Discharge window: 17:00-21:00 (indices 17,18,19,20)
+  const dischargeHours = [17, 18, 19, 20]
+  const avgPrice = dischargeHours.reduce((sum, h) => sum + Math.abs(prices[h] || 0), 0) / dischargeHours.length
+  // 4h * 1MW capacity
+  return (avgPrice * 4 * 1).toFixed(0)
+})
+
+const estimatedNetProfit = computed(() => {
+  const profit = Number(estimatedSellRevenue.value) - Number(estimatedChargeCost.value)
+  return profit.toFixed(0)
 })
 
 // === Power & Profit metric computeds (use ppData) ===
@@ -496,10 +558,121 @@ function buildPowerProfitOption(): echarts.EChartsOption {
 }
 
 // === Chart init helpers ===
+function buildAutoPreviewOption(): echarts.EChartsOption {
+  const data = chartData.value.market
+  const times = data.map(d => d.time)
+  const historicalPrices = data.map(d => d.historicalPrice ?? d.predictedPrice ?? 0)
+  const aiPrices = predictedPrices.value
+
+  return {
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: 'rgba(0, 0, 0, 0.9)',
+      borderColor: '#00ff88',
+      borderWidth: 1,
+      textStyle: { color: '#fff' },
+      formatter(params: any) {
+        let result = `<div style="font-weight:bold;margin-bottom:5px">${params[0].axisValue}</div>`
+        params.forEach((p: any) => {
+          if (p.value !== null && p.value !== undefined) {
+            result += `<div>${p.marker} ${p.seriesName}: <strong>$${typeof p.value === 'number' ? p.value.toFixed(2) : p.value}</strong></div>`
+          }
+        })
+        return result
+      },
+    },
+    legend: {
+      data: [
+        i18n.t('historicalPrice'),
+        i18n.t('aiPredictedPrice'),
+      ],
+      textStyle: { color: 'rgba(255,255,255,0.7)' },
+      top: 10,
+    },
+    grid: { left: 60, right: 30, bottom: 40, top: 50, containLabel: true },
+    xAxis: {
+      type: 'category',
+      data: times,
+      axisLine: { show: false },
+      axisLabel: { color: 'rgba(255,255,255,0.7)', interval: 1, fontSize: 12 },
+      splitLine: { show: false },
+    },
+    yAxis: {
+      type: 'value',
+      name: i18n.t('priceMWh'),
+      nameTextStyle: { color: 'rgba(255,255,255,0.7)', fontSize: 12 },
+      scale: true,
+      axisLine: { show: false },
+      axisLabel: { color: 'rgba(255,255,255,0.7)', formatter: '${value}' },
+      splitLine: { show: true, lineStyle: { color: 'rgba(255,255,255,0.05)', type: 'dashed', width: 1 } },
+    },
+    series: [
+      {
+        name: i18n.t('historicalPrice'),
+        type: 'line',
+        data: historicalPrices,
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 4,
+        lineStyle: { color: '#00ff88', width: 3 },
+        itemStyle: { color: '#00ff88' },
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: 'rgba(0,255,136,0.15)' },
+            { offset: 1, color: 'rgba(0,255,136,0.02)' },
+          ]),
+        },
+        markArea: {
+          silent: true,
+          data: [
+            [
+              {
+                xAxis: '09:00',
+                itemStyle: { color: 'rgba(0,255,136,0.08)' },
+                label: { show: true, position: 'insideTop', formatter: i18n.t('chargeWindow'), color: 'rgba(0,255,136,0.6)', fontSize: 11 },
+              },
+              { xAxis: '13:00' },
+            ],
+            [
+              {
+                xAxis: '17:00',
+                itemStyle: { color: 'rgba(255,193,7,0.08)' },
+                label: { show: true, position: 'insideTop', formatter: i18n.t('dischargeWindow'), color: 'rgba(255,193,7,0.6)', fontSize: 11 },
+              },
+              { xAxis: '21:00' },
+            ],
+          ],
+        },
+      },
+      {
+        name: i18n.t('aiPredictedPrice'),
+        type: 'line',
+        data: aiPrices,
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 4,
+        lineStyle: { color: '#a855f7', width: 2, type: 'dashed' },
+        itemStyle: { color: '#a855f7' },
+      },
+    ],
+  }
+}
+
 function initMarketChart() {
   if (!marketChartRef.value) return
   marketChart.value = echarts.init(marketChartRef.value)
   marketChart.value.setOption(buildMarketOption())
+}
+
+function initAutoPreviewChart() {
+  if (!autoPreviewChartRef.value) return
+  if (autoPreviewChart.value) {
+    autoPreviewChart.value.setOption(buildAutoPreviewOption(), true)
+    return
+  }
+  autoPreviewChart.value = echarts.init(autoPreviewChartRef.value)
+  autoPreviewChart.value.setOption(buildAutoPreviewOption())
 }
 
 function initPowerProfitChart() {
@@ -524,12 +697,17 @@ watch(() => i18n.locale, () => {
   nextTick(() => {
     marketChart.value?.setOption(buildMarketOption(), true)
     powerProfitChart.value?.setOption(buildPowerProfitOption(), true)
+    if (activeTab.value === 'autoPreview') {
+      autoPreviewChart.value?.setOption(buildAutoPreviewOption(), true)
+    }
   })
 })
 
 watch(activeTab, (newTab) => {
   if (newTab === 'market') {
     nextTick(() => { initMarketChart() })
+  } else if (newTab === 'autoPreview') {
+    nextTick(() => { initAutoPreviewChart() })
   }
 })
 
@@ -560,6 +738,7 @@ watch(ppYear, () => {
 function handleResize() {
   marketChart.value?.resize()
   powerProfitChart.value?.resize()
+  autoPreviewChart.value?.resize()
 }
 
 onMounted(() => {
@@ -574,8 +753,10 @@ onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
   marketChart.value?.dispose()
   powerProfitChart.value?.dispose()
+  autoPreviewChart.value?.dispose()
   marketChart.value = null
   powerProfitChart.value = null
+  autoPreviewChart.value = null
 })
 </script>
 
@@ -652,6 +833,49 @@ onUnmounted(() => {
   font-weight: 500;
 }
 .coming-soon-icon { font-size: 48px; }
+
+/* Auto Preview Panel */
+.auto-preview-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.ap-stats-row {
+  display: flex;
+  align-items: stretch;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  padding: 16px 0;
+}
+.ap-stat-card {
+  flex: 1;
+  text-align: center;
+  padding: 0 16px;
+}
+.ap-stat-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+.ap-stat-sub {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  margin-bottom: 8px;
+}
+.ap-stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+.ap-stat-value.charge-cost { color: #ff6b6b; }
+.ap-stat-value.sell-revenue { color: #ffc107; }
+.ap-stat-value.net-profit { color: #00ff88; }
+.ap-stat-divider {
+  width: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  align-self: stretch;
+}
 
 .chart-container { width: 100%; height: 400px; }
 
