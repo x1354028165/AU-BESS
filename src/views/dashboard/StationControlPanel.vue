@@ -38,8 +38,7 @@
     <div class="control-center">
       <button
         class="action-btn charge-btn"
-        v-show="currentStation.runStatus !== 'charging' && currentStation.runStatus !== 'discharging'"
-        :disabled="isAutoMode"
+        v-show="!isAutoMode && currentStation.runStatus !== 'charging' && currentStation.runStatus !== 'discharging'"
         @click="handleCharge"
       >
         {{ i18n.t('charge') }}
@@ -68,8 +67,7 @@
 
       <button
         class="action-btn discharge-btn"
-        v-show="currentStation.runStatus !== 'charging' && currentStation.runStatus !== 'discharging'"
-        :disabled="isAutoMode"
+        v-show="!isAutoMode && currentStation.runStatus !== 'charging' && currentStation.runStatus !== 'discharging'"
         @click="handleDischarge"
       >
         {{ i18n.t('discharge') }}
