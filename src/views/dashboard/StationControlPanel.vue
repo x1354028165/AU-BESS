@@ -176,7 +176,7 @@
         <div class="settings-modal">
           <div class="settings-modal-header">
             <h2>Settings</h2>
-            <span class="settings-station-tag">{{ currentStation.name?.split(' ')[0] }}</span>
+            <span class="settings-station-tag">{{ currentStation.region || 'SA' }}</span>
             <button class="settings-close-btn" @click="closeSettings">✕</button>
           </div>
 
@@ -185,32 +185,45 @@
             <h3 class="settings-section-title">🔋 SOC Settings</h3>
             <div class="soc-settings-row">
               <div class="soc-setting-item">
-                <label class="soc-setting-label charge-label">Charge Stop SOC</label>
-                <div class="soc-slider-wrap">
-                  <input type="range" v-model.number="editChargeSOC" min="0" max="100" class="soc-slider charge-slider" />
+                <div class="soc-header-row">
+                  <label class="soc-setting-label charge-label">Charge Stop SOC</label>
                   <div class="soc-input-wrap">
-                    <input type="number" v-model.number="editChargeSOC" min="0" max="100" class="soc-number-input" />
+                    <input type="number" v-model.number="editChargeSOC" min="0" max="100" class="soc-number-input charge-input" />
                     <span>%</span>
                   </div>
                 </div>
+                <input type="range" v-model.number="editChargeSOC" min="0" max="100" class="soc-slider charge-slider full-width" />
               </div>
               <div class="soc-setting-item">
-                <label class="soc-setting-label discharge-label">Discharge Stop SOC</label>
-                <div class="soc-slider-wrap">
-                  <input type="range" v-model.number="editDischargeSOC" min="0" max="100" class="soc-slider discharge-slider" />
+                <div class="soc-header-row">
+                  <label class="soc-setting-label discharge-label">Discharge Stop SOC</label>
                   <div class="soc-input-wrap">
-                    <input type="number" v-model.number="editDischargeSOC" min="0" max="100" class="soc-number-input" />
+                    <input type="number" v-model.number="editDischargeSOC" min="0" max="100" class="soc-number-input discharge-input" />
                     <span>%</span>
                   </div>
                 </div>
+                <input type="range" v-model.number="editDischargeSOC" min="0" max="100" class="soc-slider discharge-slider full-width" />
               </div>
             </div>
           </div>
 
           <!-- Auto Conditions -->
           <div class="settings-section">
-            <h3 class="settings-section-title">⏰ Auto Conditions</h3>
-            <p class="settings-hint">💡 Set charge and discharge time windows. Charge and discharge periods cannot overlap.</p>
+            <h3 class="settings-section-title">⏰ Time Condition Settings</h3>
+            <p class="settings-hint">💡 Set charge and discharge time windows. Charge and discharge periods cannot overlap — conflicts are detected automatically before saving.</p>
+
+            <!-- 24h 时间轴可视化 -->
+            <div class="timeline-bar">
+              <div class="timeline-track">
+                <div class="timeline-charge-block" :style="timelineChargeStyle"></div>
+                <div class="timeline-discharge-block" :style="timelineDischargeStyle"></div>
+              </div>
+              <div class="timeline-labels">
+                <span>00:00</span><span>03:00</span><span>06:00</span><span>09:00</span>
+                <span>12:00</span><span>15:00</span><span>18:00</span><span>21:00</span><span>24:00</span>
+              </div>
+            </div>
+
             <div class="time-settings-row">
               <div class="time-setting-item">
                 <label class="time-setting-label charge-label">Charge Time</label>
@@ -446,6 +459,24 @@ function handleDischarge() {
   // 弹出确认弹窗
   pendingOperation.value = 'discharge'
   showOperationConfirm.value = true
+}
+
+// 24h 时间轴样式计算
+const timelineChargeStyle = computed(() => {
+  const start = timeToPercent(editChargeStart.value)
+  const end = timeToPercent(editChargeEnd.value)
+  return { left: start + '%', width: (end - start) + '%' }
+})
+
+const timelineDischargeStyle = computed(() => {
+  const start = timeToPercent(editDischargeStart.value)
+  const end = timeToPercent(editDischargeEnd.value)
+  return { left: start + '%', width: (end - start) + '%' }
+})
+
+function timeToPercent(t: string) {
+  const [h, m] = t.split(':').map(Number)
+  return ((h * 60 + m) / 1440) * 100
 }
 
 function confirmOperation() {
@@ -1548,5 +1579,63 @@ function toggleEditMode() {
 }
 
 .btn-save-settings:hover { background: #00cc6a; }
+
+
+/* === 24h Timeline Bar === */
+.timeline-bar {
+  margin-bottom: 20px;
+}
+
+.timeline-track {
+  position: relative;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  margin-bottom: 4px;
+}
+
+.timeline-charge-block {
+  position: absolute;
+  top: 2px;
+  height: 20px;
+  background: linear-gradient(90deg, rgba(0, 255, 136, 0.3), rgba(0, 255, 136, 0.5));
+  border: 1px solid rgba(0, 255, 136, 0.6);
+  border-radius: 3px;
+}
+
+.timeline-discharge-block {
+  position: absolute;
+  top: 2px;
+  height: 20px;
+  background: linear-gradient(90deg, rgba(100, 149, 237, 0.3), rgba(100, 149, 237, 0.5));
+  border: 1px solid rgba(100, 149, 237, 0.6);
+  border-radius: 3px;
+}
+
+.timeline-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+/* === SOC Header Row (label left, input right) === */
+.soc-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.soc-slider.full-width {
+  width: 100%;
+}
+
+.soc-number-input.charge-input {
+  border-color: rgba(0, 255, 136, 0.3);
+}
+
+.soc-number-input.discharge-input {
+  border-color: rgba(255, 193, 7, 0.3);
+}
 
 </style>
