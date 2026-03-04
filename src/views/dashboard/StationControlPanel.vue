@@ -107,57 +107,46 @@
         </button>
       </div>
 
-      <div class="settings-row">
-        <span class="settings-label">{{ i18n.t('chargeStopSOC') }}</span>
-        <div class="settings-value-wrap">
-          <input
-            v-if="isEditMode"
-            v-model.number="chargeStopSOC"
-            type="number"
-            min="0"
-            max="100"
-            class="settings-input"
-          />
-          <span v-else class="settings-value">{{ chargeStopSOC }}%</span>
+      <div class="settings-grid">
+        <!-- 左列：Charge -->
+        <div class="settings-card">
+          <div class="settings-card-label">{{ i18n.t('chargeStopSOC') }}</div>
+          <div class="settings-card-value">
+            <input v-if="isEditMode" v-model.number="chargeStopSOC" type="number" min="0" max="100" class="settings-input" />
+            <span v-else>{{ chargeStopSOC }}%</span>
+          </div>
         </div>
-      </div>
-
-      <div class="settings-row">
-        <span class="settings-label">{{ i18n.t('dischargeStopSOC') }}</span>
-        <div class="settings-value-wrap">
-          <input
-            v-if="isEditMode"
-            v-model.number="dischargeStopSOC"
-            type="number"
-            min="0"
-            max="100"
-            class="settings-input"
-          />
-          <span v-else class="settings-value">{{ dischargeStopSOC }}%</span>
+        <!-- 右列：Discharge -->
+        <div class="settings-card">
+          <div class="settings-card-label">{{ i18n.t('dischargeStopSOC') }}</div>
+          <div class="settings-card-value">
+            <input v-if="isEditMode" v-model.number="dischargeStopSOC" type="number" min="0" max="100" class="settings-input" />
+            <span v-else>{{ dischargeStopSOC }}%</span>
+          </div>
         </div>
-      </div>
-
-      <div class="settings-row">
-        <span class="settings-label">{{ i18n.t('autoCharge') }}</span>
-        <div class="settings-value-wrap">
-          <template v-if="isEditMode">
-            <input v-model="autoChargeStart" type="time" class="settings-input time-input" />
-            <span class="time-separator">-</span>
-            <input v-model="autoChargeEnd" type="time" class="settings-input time-input" />
-          </template>
-          <span v-else class="settings-time-bar charge-time-bar">{{ autoChargeStart }} - {{ autoChargeEnd }}</span>
+        <!-- 左列：Auto Charge时段 -->
+        <div class="settings-card">
+          <div class="settings-card-label">{{ i18n.t('autoCharge') }}</div>
+          <div class="settings-card-value">
+            <template v-if="isEditMode">
+              <input v-model="autoChargeStart" type="time" class="settings-input time-input" />
+              <span class="time-separator">-</span>
+              <input v-model="autoChargeEnd" type="time" class="settings-input time-input" />
+            </template>
+            <span v-else class="settings-time-bar charge-time-bar">{{ autoChargeStart }} - {{ autoChargeEnd }}</span>
+          </div>
         </div>
-      </div>
-
-      <div class="settings-row">
-        <span class="settings-label">{{ i18n.t('autoDischarge') }}</span>
-        <div class="settings-value-wrap">
-          <template v-if="isEditMode">
-            <input v-model="autoDischargeStart" type="time" class="settings-input time-input" />
-            <span class="time-separator">-</span>
-            <input v-model="autoDischargeEnd" type="time" class="settings-input time-input" />
-          </template>
-          <span v-else class="settings-time-bar discharge-time-bar">{{ autoDischargeStart }} - {{ autoDischargeEnd }}</span>
+        <!-- 右列：Auto Discharge时段 -->
+        <div class="settings-card">
+          <div class="settings-card-label">{{ i18n.t('autoDischarge') }}</div>
+          <div class="settings-card-value">
+            <template v-if="isEditMode">
+              <input v-model="autoDischargeStart" type="time" class="settings-input time-input" />
+              <span class="time-separator">-</span>
+              <input v-model="autoDischargeEnd" type="time" class="settings-input time-input" />
+            </template>
+            <span v-else class="settings-time-bar discharge-time-bar">{{ autoDischargeStart }} - {{ autoDischargeEnd }}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -1192,17 +1181,44 @@ function toggleEditMode() {
   background: #e6ac00;
 }
 
-/* === Settings分割线 === */
-.settings-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+/* === Settings 2x2 Grid === */
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
-.settings-row:last-child {
-  border-bottom: none;
+.settings-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.settings-card-label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 6px;
+}
+
+.settings-card-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.settings-card-value .settings-input {
+  width: 60px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  color: #fff;
+  padding: 4px 8px;
+  font-size: 14px;
+}
+
+.settings-card-value .time-input {
+  width: 80px;
 }
 
 </style>
