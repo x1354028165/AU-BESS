@@ -224,6 +224,10 @@ const messages: Record<string, Record<Locale, string>> = {
   allStations: { en: 'All Stations', zh: '全部电站' },
   allAlarmLevel: { en: 'All Alarm Level', zh: '全部告警级别' },
   totalItems: { en: 'Total {n} items', zh: '共 {n} 条' },
+  // Map page (Phase 7)
+  navMap: { en: 'Map', zh: '地图' },
+  stationMap: { en: 'Station Map', zh: '电站地图' },
+  deviceCount: { en: 'Devices', zh: '设备数' },
 }
 
 // 运行模式：mock数据中的中文值 → 翻译key 的映射

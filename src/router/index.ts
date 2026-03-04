@@ -55,12 +55,12 @@ const router = createRouter({
           meta: { title: 'navFaultAlarm', roles: ['owner', 'operator'] },
         },
         {
-        {
           path: 'map',
           name: 'map',
           component: () => import('../views/dashboard/OwnerMapView.vue'),
           meta: { title: 'navMap', roles: ['owner'] },
         },
+        {
           path: 'clients',
           name: 'clients',
           component: () => import('../views/DashboardView.vue'), // temp reuse
