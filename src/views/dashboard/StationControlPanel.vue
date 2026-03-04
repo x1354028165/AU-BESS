@@ -837,7 +837,7 @@ function saveSettings() {
 
 .battery-body {
   width: 100%;
-  max-width: 140px;
+  max-width: 100px;
   height: 26px;
   border: 2px solid rgba(255, 255, 255, 0.25);
   border-radius: 6px;
