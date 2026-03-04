@@ -125,7 +125,7 @@ const messages: Record<string, Record<Locale, string>> = {
   conflictTitle: { en: 'Cannot Switch to Auto', zh: '无法切换自动模式' },
   conflictMsg: { en: 'Please stop manual dispatch first before enabling Auto mode.', zh: '请先停止手动调度再开启自动模式。' },
   switchToManual: { en: 'Switch to Manual Mode', zh: '切换至手动模式' },
-  autoOffMsg: { en: 'The station is currently running. After switching to Manual, the operation will continue. You can use the STOP button on the control circle to stop manually.', zh: '电站当前正在运行中。切换到手动模式后，当前操作将继续执行。您可以通过控制圆的 STOP 按钮手动停机。' },
+  autoOffMsg: { en: 'The station is currently running. Please stop the operation first before switching modes.', zh: '电站当前正在运行中，请先停止，再进行模式切换。' },
   confirmSwitch: { en: 'Switch to Manual', zh: '切换手动' },
   chargeStopSOCLabel: { en: 'Charge Stop SOC', zh: '充电停止SOC' },
   dischargeStopSOCLabel: { en: 'Discharge Stop SOC', zh: '放电停止SOC' },

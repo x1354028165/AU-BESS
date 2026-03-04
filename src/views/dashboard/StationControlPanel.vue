@@ -197,9 +197,8 @@
           <p style="color: rgba(255,255,255,0.6); font-size: 13px; line-height: 1.8; margin: 0 0 20px;">
             {{ i18n.t('autoOffMsg') }}
           </p>
-          <div class="op-confirm-actions">
-            <button class="btn-cancel" @click="showAutoOffConfirm = false">Cancel</button>
-            <button class="btn-confirm-op charge" @click="confirmAutoOff">{{ i18n.t('confirmSwitch') }}</button>
+          <div class="op-confirm-actions" style="justify-content: flex-end;">
+            <button class="btn-confirm-op charge" @click="showAutoOffConfirm = false">OK</button>
           </div>
         </div>
       </div>
@@ -493,11 +492,7 @@ function toggleAutoMode() {
   isAutoMode.value = !isAutoMode.value
 }
 
-function confirmAutoOff() {
-  // 关闭Auto，保持当前运行状态，激活手动STOP
-  isAutoMode.value = false
-  showAutoOffConfirm.value = false
-}
+// Auto关闭弹窗只做提示，不执行切换
 
 function handleCharge() {
   if (isAutoMode.value) return
@@ -1257,8 +1252,8 @@ function saveSettings() {
   padding: 10px 24px;
   border-radius: 8px;
   border: none;
-  background: #ff4757;
-  color: #fff;
+  background: var(--color-primary);
+  color: #1a1f2e;
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
@@ -1825,16 +1820,16 @@ function saveSettings() {
 
 .btn-confirm-stop {
   padding: 10px 24px;
-  background: #ff3b30;
+  background: var(--color-primary);
   border: none;
   border-radius: 8px;
-  color: #fff;
+  color: #1a1f2e;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
 }
 
-.btn-confirm-stop:hover { background: #ee3344; }
+.btn-confirm-stop:hover { background: #00cc6a; }
 
 /* 操作确认弹窗 */
 .op-confirm-modal {
@@ -1919,15 +1914,21 @@ function saveSettings() {
   padding: 10px 24px;
   border-radius: 8px;
   border: none;
-  color: #fff;
+  color: #1a1f2e;
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
+  background: var(--color-primary);
+}
+
+.btn-confirm-op:hover {
+  background: #00cc6a;
 }
 
 .btn-confirm-op.charge,
 .btn-confirm-op.btn-charge {
   background: var(--color-primary);
+  color: #1a1f2e;
 }
 
 .btn-confirm-op.charge:hover,
