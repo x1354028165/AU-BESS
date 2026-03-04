@@ -36,7 +36,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   // 选择角色
-  function setRole(role: 'owner' | 'operator') {
+  function setRole(role: 'owner' | 'operator' | null) {
     user.value.role = role
   }
 

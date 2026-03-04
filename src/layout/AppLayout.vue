@@ -47,9 +47,7 @@ function handleLogout() {
 }
 
 function handleSwitchRole() {
-  authStore.setRole(null as unknown as 'owner' | 'operator')
-  // Need to set role to null — use the store's user ref directly
-  authStore.user.role = null
+  authStore.setRole(null)
   router.push('/role-select')
 }
 </script>
