@@ -183,22 +183,50 @@
     </Transition>
   </Teleport>
 
-  <!-- Auto关闭确认弹窗 -->
+  <!-- Auto开启确认弹窗 (v2风格) -->
   <Teleport to="body">
     <Transition name="fade">
-      <div v-if="showAutoOffConfirm" class="stop-confirm-overlay" @click.self="showAutoOffConfirm = false">
-        <div class="op-confirm-modal">
-          <div class="op-confirm-header">
-            <div class="op-confirm-icon-wrap" style="background: rgba(255,165,0,0.12); box-shadow: 0 4px 12px rgba(255,165,0,0.15);">
-              <span>🔄</span>
-            </div>
-            <h3 class="op-confirm-title">{{ i18n.t('switchToManual') }}</h3>
+      <div v-if="showAutoOnConfirm" class="stop-confirm-overlay" @click.self="showAutoOnConfirm = false">
+        <div class="auto-confirm-modal">
+          <div class="auto-confirm-header">
+            <h3>{{ i18n.t('confirmAutoMode') }}</h3>
+            <p>{{ i18n.t('confirmAutoModeDesc') }}</p>
           </div>
-          <p style="color: rgba(255,255,255,0.6); font-size: 13px; line-height: 1.8; margin: 0 0 20px;">
-            {{ i18n.t('autoOffMsg') }}
-          </p>
-          <div class="op-confirm-actions" style="justify-content: flex-end;">
-            <button class="btn-confirm-op charge" @click="showAutoOffConfirm = false">OK</button>
+
+          <div class="auto-confirm-body">
+            <div class="auto-conditions-grid">
+              <div class="condition-card charge-condition">
+                <div class="condition-title">⚡ {{ i18n.t('chargeConditions') }}</div>
+                <div class="condition-slot">
+                  <div class="slot-label">{{ i18n.t('timeSlot') }} 1</div>
+                  <div class="slot-value">🕐 {{ autoChargeStart }} – {{ autoChargeEnd }}</div>
+                </div>
+                <div class="condition-soc">
+                  ✓ {{ i18n.t('chargeToSOC') }} <span class="soc-val charge-val">{{ chargeStopSOC }}%</span>
+                </div>
+              </div>
+
+              <div class="condition-card discharge-condition">
+                <div class="condition-title">🔋 {{ i18n.t('dischargeConditions') }}</div>
+                <div class="condition-slot">
+                  <div class="slot-label">{{ i18n.t('timeSlot') }} 1</div>
+                  <div class="slot-value">🕐 {{ autoDischargeStart }} – {{ autoDischargeEnd }}</div>
+                </div>
+                <div class="condition-soc">
+                  ✓ {{ i18n.t('dischargeToSOC') }} <span class="soc-val discharge-val">{{ dischargeStopSOC }}%</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="auto-confirm-hint">
+              💡 {{ i18n.t('autoHint') }}
+            </div>
+          </div>
+
+          <div class="auto-confirm-footer">
+            <button class="btn-edit-settings" @click="editSettingsFromAutoConfirm">{{ i18n.t('editSettings') }}</button>
+            <button class="btn-cancel" @click="showAutoOnConfirm = false">Cancel</button>
+            <button class="btn-confirm-op charge" @click="confirmEnableAuto">{{ i18n.t('confirmEnable') }}</button>
           </div>
         </div>
       </div>
@@ -472,27 +500,35 @@ const socColorClass = computed(() => {
 
 // === 状态机交互 ===
 
-const showAutoOffConfirm = ref(false)
+const showAutoOnConfirm = ref(false)
 
 function toggleAutoMode() {
   const state = stationStates[selectedStationId.value]
 
-  // Patch 1: 手动运行中→开Auto → 拦截
+  // 手动运行中→开Auto → 拦截
   if (!isAutoMode.value && state && (state.runStatus === 'charging' || state.runStatus === 'discharging')) {
     showConflictAlert.value = true
     return
   }
 
-  // Patch 2: Auto关闭时，如果正在运行，弹确认弹窗
-  if (isAutoMode.value && state && (state.runStatus === 'charging' || state.runStatus === 'discharging')) {
-    showAutoOffConfirm.value = true
-    return
+  if (!isAutoMode.value) {
+    // 开启Auto → 弹确认弹窗(v2风格)
+    showAutoOnConfirm.value = true
+  } else {
+    // 关闭Auto → 直接关，不弹窗
+    isAutoMode.value = false
   }
-
-  isAutoMode.value = !isAutoMode.value
 }
 
-// Auto关闭弹窗只做提示，不执行切换
+function confirmEnableAuto() {
+  isAutoMode.value = true
+  showAutoOnConfirm.value = false
+}
+
+function editSettingsFromAutoConfirm() {
+  showAutoOnConfirm.value = false
+  toggleEditMode()
+}
 
 function handleCharge() {
   if (isAutoMode.value) return
@@ -1977,6 +2013,140 @@ function saveSettings() {
 }
 .fade-enter-from, .fade-leave-to {
   opacity: 0;
+}
+
+
+/* === Auto开启确认弹窗 (v2 style) === */
+.auto-confirm-modal {
+  background: linear-gradient(145deg, #1e1e2e 0%, #252535 100%);
+  border-radius: 16px;
+  width: 520px;
+  max-width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+}
+
+.auto-confirm-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.auto-confirm-header h3 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.auto-confirm-header p {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 4px 0 0;
+}
+
+.auto-confirm-body {
+  padding: 20px 24px;
+}
+
+.auto-conditions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.condition-card {
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.condition-card.charge-condition {
+  background: rgba(0, 255, 136, 0.04);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+}
+
+.condition-card.discharge-condition {
+  background: rgba(255, 193, 7, 0.04);
+  border: 1px solid rgba(255, 193, 7, 0.2);
+}
+
+.condition-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.charge-condition .condition-title { color: #00ff88; }
+.discharge-condition .condition-title { color: #ffc107; }
+
+.condition-slot {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+
+.charge-condition .condition-slot { border-left: 3px solid #00ff88; }
+.discharge-condition .condition-slot { border-left: 3px solid #ffc107; }
+
+.slot-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 4px;
+}
+
+.slot-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.condition-soc {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 8px;
+  padding-top: 8px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.condition-soc .soc-val {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.condition-soc .charge-val { color: #00ff88; }
+.condition-soc .discharge-val { color: #ffc107; }
+
+.auto-confirm-hint {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.auto-confirm-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.btn-edit-settings {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-edit-settings:hover {
+  background: rgba(255, 255, 255, 0.12);
 }
 
 </style>
