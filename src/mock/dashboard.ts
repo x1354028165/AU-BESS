@@ -307,6 +307,12 @@ export function getOperatorChartData(): OperatorChartData {
   return { market, powerProfit }
 }
 
+// === 获取所有电站（供 StationView 使用）===
+
+export function getAllStations(): Station[] {
+  return allStations
+}
+
 // === 根据电站列表计算概览 ===
 
 export function computeSummary(stations: Station[]): DashboardSummary {

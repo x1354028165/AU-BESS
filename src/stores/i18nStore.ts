@@ -123,6 +123,24 @@ const messages: Record<string, Record<Locale, string>> = {
   confirmLogoutMsg: { en: 'Are you sure you want to logout?', zh: '您确定要退出系统吗？' },
   cancel: { en: 'Cancel', zh: '取消' },
   confirmBtn: { en: 'Confirm', zh: '确认退出' },
+
+  // Station View (Phase 6)
+  stations: { en: 'Stations', zh: '电站列表' },
+  table: { en: 'Table', zh: '表格' },
+  card: { en: 'Card', zh: '卡片' },
+  searchStation: { en: 'Search station name...', zh: '搜索电站名称...' },
+  allRegions: { en: 'All Regions', zh: '全部区域' },
+  allStatus: { en: 'All Status', zh: '全部状态' },
+  search: { en: 'Search', zh: '搜索' },
+  reset: { en: 'Reset', zh: '重置' },
+  stationName: { en: 'Station Name', zh: '电站名称' },
+  capacityMW: { en: 'Capacity (MW)', zh: '容量 (MW)' },
+  region: { en: 'Region', zh: '区域' },
+  status: { en: 'Status', zh: '状态' },
+  powerMW: { en: 'Power (MW)', zh: '功率 (MW)' },
+  todayNetProfit: { en: 'Today Net Profit', zh: '今日净收益' },
+  totalNetProfit: { en: 'Total Net Profit', zh: '累计净收益' },
+  actions: { en: 'Actions', zh: '操作' },
 }
 
 // 运行模式：mock数据中的中文值 → 翻译key 的映射

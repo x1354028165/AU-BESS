@@ -45,7 +45,7 @@ const router = createRouter({
         {
           path: 'stations',
           name: 'stations',
-          component: () => import('../views/DashboardView.vue'), // temp reuse
+          component: () => import('../views/StationView.vue'),
           meta: { title: 'navStation', roles: ['owner', 'operator'] },
         },
         {
