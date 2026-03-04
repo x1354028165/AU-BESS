@@ -551,6 +551,20 @@ function toggleEditMode() {
   editDischargeEnd.value = autoDischargeEnd.value
   showSettingsModal.value = true
 }
+
+function closeSettings() {
+  showSettingsModal.value = false
+}
+
+function saveSettings() {
+  chargeStopSOC.value = editChargeSOC.value
+  dischargeStopSOC.value = editDischargeSOC.value
+  autoChargeStart.value = editChargeStart.value
+  autoChargeEnd.value = editChargeEnd.value
+  autoDischargeStart.value = editDischargeStart.value
+  autoDischargeEnd.value = editDischargeEnd.value
+  showSettingsModal.value = false
+}
 </script>
 
 <style scoped>
