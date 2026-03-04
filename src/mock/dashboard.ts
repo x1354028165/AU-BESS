@@ -349,3 +349,106 @@ export function computeSummary(stations: Station[]): DashboardSummary {
     onlineCount: onlineStations.length,
   }
 }
+
+// === Period-specific Power & Profit data generators ===
+
+/** Seeded random for deterministic mock data */
+function seededRandom(seed: number): () => number {
+  let s = seed
+  return () => {
+    s = (s * 16807 + 0) % 2147483647
+    return (s - 1) / 2147483646
+  }
+}
+
+/** Generate Power & Profit data for Month view (daily aggregates) */
+export function getPowerProfitMonthData(year: number, month: number): PowerProfitDataPoint[] {
+  const daysInMonth = new Date(year, month, 0).getDate()
+  const rand = seededRandom(year * 100 + month)
+  const result: PowerProfitDataPoint[] = []
+  const avgPrice = 85 // avg $/MWh
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const chgMWh = 4 + rand() * 3   // 4-7 MWh/day
+    const dchMWh = 3 + rand() * 4   // 3-7 MWh/day
+    // Charge happens at low prices (~$40-60), discharge at high prices (~$120-180)
+    const chgPrice = 40 + rand() * 20
+    const dchPrice = 120 + rand() * 60
+    const cost = chgMWh * chgPrice
+    const rev = dchMWh * dchPrice
+
+    result.push({
+      time: String(d),
+      chargeEnergy: parseFloat((-chgMWh).toFixed(2)),
+      dischargeEnergy: parseFloat(dchMWh.toFixed(2)),
+      chargeCost: parseFloat((-cost).toFixed(2)),
+      dischargeRevenue: parseFloat(rev.toFixed(2)),
+      netProfit: parseFloat((rev - cost).toFixed(2)),
+    })
+  }
+  return result
+}
+
+/** Generate Power & Profit data for Year view (monthly aggregates) */
+export function getPowerProfitYearData(year: number): PowerProfitDataPoint[] {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const rand = seededRandom(year)
+  const result: PowerProfitDataPoint[] = []
+  // Seasonal pattern: higher in summer (Dec-Feb in AU) and winter peaks (Jun-Aug)
+  const seasonalFactor = [1.15, 1.10, 1.0, 0.90, 0.95, 1.05, 1.10, 1.05, 0.95, 0.90, 0.95, 1.10]
+
+  for (let m = 0; m < 12; m++) {
+    const sf = seasonalFactor[m]
+    const chgMWh = (110 + rand() * 45) * sf   // 110-155 MWh/month with seasonal
+    const dchMWh = (100 + rand() * 50) * sf   // 100-150 MWh/month with seasonal
+    const avgChgPrice = 35 + rand() * 25
+    const avgDchPrice = 110 + rand() * 70
+    const cost = chgMWh * avgChgPrice
+    const rev = dchMWh * avgDchPrice
+
+    result.push({
+      time: months[m],
+      chargeEnergy: parseFloat((-chgMWh).toFixed(1)),
+      dischargeEnergy: parseFloat(dchMWh.toFixed(1)),
+      chargeCost: parseFloat((-cost).toFixed(0)),
+      dischargeRevenue: parseFloat(rev.toFixed(0)),
+      netProfit: parseFloat((rev - cost).toFixed(0)),
+    })
+  }
+  return result
+}
+
+/** Generate Power & Profit data for Cumulative view (yearly totals) */
+export function getPowerProfitCumulativeData(): PowerProfitDataPoint[] {
+  const years = [2021, 2022, 2023, 2024, 2025]
+  const rand = seededRandom(2021)
+  const result: PowerProfitDataPoint[] = []
+  let cumCharge = 0
+  let cumDischarge = 0
+  let cumCost = 0
+  let cumRev = 0
+
+  for (const year of years) {
+    // Yearly totals grow as capacity comes online
+    const growthFactor = 1 + (year - 2021) * 0.15
+    const yearChg = (1200 + rand() * 400) * growthFactor
+    const yearDch = (1100 + rand() * 450) * growthFactor
+    const yearCost = yearChg * (40 + rand() * 15)
+    const yearRev = yearDch * (115 + rand() * 50)
+
+    cumCharge += yearChg
+    cumDischarge += yearDch
+    cumCost += yearCost
+    cumRev += yearRev
+
+    result.push({
+      time: String(year),
+      chargeEnergy: parseFloat((-cumCharge).toFixed(0)),
+      dischargeEnergy: parseFloat(cumDischarge.toFixed(0)),
+      chargeCost: parseFloat((-cumCost).toFixed(0)),
+      dischargeRevenue: parseFloat(cumRev.toFixed(0)),
+      netProfit: parseFloat((cumRev - cumCost).toFixed(0)),
+    })
+  }
+  return result
+}

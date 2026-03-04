@@ -116,6 +116,16 @@ const messages: Record<string, Record<Locale, string>> = {
   year: { en: 'Year', zh: '年' },
   cumulative: { en: 'Cumulative', zh: '累计' },
 
+  // Power & Profit period-specific metric titles
+  monthlyCharge: { en: 'Monthly Charge', zh: '本月充电' },
+  monthlyDischarge: { en: 'Monthly Discharge', zh: '本月放电' },
+  annualCharge: { en: 'Annual Charge', zh: '年度充电' },
+  annualDischarge: { en: 'Annual Discharge', zh: '年度放电' },
+  totalCharge: { en: 'Total Charge', zh: '累计充电' },
+  totalDischarge: { en: 'Total Discharge', zh: '累计放电' },
+  vsLastMonth: { en: 'vs Last Month', zh: '较上月' },
+  vsLastYear: { en: 'vs Last Year', zh: '较去年' },
+
   // Header UI
   operationType: { en: 'Operation Type', zh: '操作类型' },
   estChargeTime: { en: 'Est. Full Charge Time', zh: '预计充满时间' },

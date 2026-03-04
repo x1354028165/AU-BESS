@@ -70,28 +70,49 @@
               <option value="year">{{ i18n.t('year') }}</option>
               <option value="cumulative">{{ i18n.t('cumulative') }}</option>
             </select>
-            <input v-model="ppDate" type="date" class="pp-date-input" />
+            <!-- Dynamic date picker based on period -->
+            <input
+              v-if="ppPeriod === 'day'"
+              v-model="ppDate"
+              type="date"
+              class="pp-date-input"
+            />
+            <input
+              v-else-if="ppPeriod === 'month'"
+              v-model="ppMonth"
+              type="month"
+              class="pp-date-input"
+            />
+            <input
+              v-else-if="ppPeriod === 'year'"
+              v-model.number="ppYear"
+              type="number"
+              :min="2020"
+              :max="currentYear"
+              class="pp-date-input pp-year-input"
+            />
+            <!-- cumulative: no picker -->
           </div>
         </div>
 
         <div class="pp-metric-cards">
           <div class="pp-metric-card">
-            <div class="pp-metric-title">{{ i18n.t('todayCharge') }}</div>
-            <div class="pp-metric-main">{{ totalCharge.toFixed(2) }} MWh</div>
-            <div class="pp-metric-sub">{{ i18n.t('cost') }} ${{ Math.abs(totalChargeCost).toFixed(0) }}</div>
+            <div class="pp-metric-title">{{ i18n.t(chargeLabel) }}</div>
+            <div class="pp-metric-main">{{ formatEnergy(totalCharge) }} MWh</div>
+            <div class="pp-metric-sub">{{ i18n.t('cost') }} ${{ formatDollar(Math.abs(totalChargeCost)) }}</div>
           </div>
           <div class="pp-metric-card">
-            <div class="pp-metric-title">{{ i18n.t('todayDischarge') }}</div>
-            <div class="pp-metric-main">{{ totalDischarge.toFixed(2) }} MWh</div>
-            <div class="pp-metric-sub">{{ i18n.t('revenue') }} ${{ totalDischargeRevenue.toFixed(0) }}</div>
+            <div class="pp-metric-title">{{ i18n.t(dischargeLabel) }}</div>
+            <div class="pp-metric-main">{{ formatEnergy(totalDischarge) }} MWh</div>
+            <div class="pp-metric-sub">{{ i18n.t('revenue') }} ${{ formatDollar(totalDischargeRevenue) }}</div>
           </div>
           <div class="pp-metric-card">
             <div class="pp-metric-title">{{ i18n.t('netProfit') }}</div>
-            <div class="pp-metric-main profit-value">${{ netProfitTotal.toFixed(0) }}</div>
+            <div class="pp-metric-main profit-value">${{ formatDollar(netProfitTotal) }}</div>
             <div class="pp-metric-sub">
-              {{ i18n.t('vsYesterday') }}
-              <span class="pp-trend" :class="vsYesterday >= 0 ? 'trend-up' : 'trend-down'">
-                {{ vsYesterday >= 0 ? '↑' : '↓' }}{{ Math.abs(vsYesterday) }}%
+              {{ i18n.t(comparisonLabel) }}
+              <span class="pp-trend" :class="vsComparison >= 0 ? 'trend-up' : 'trend-down'">
+                {{ vsComparison >= 0 ? '↑' : '↓' }}{{ Math.abs(vsComparison) }}%
               </span>
             </div>
           </div>
@@ -107,17 +128,28 @@
 import { ref, shallowRef, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import * as echarts from 'echarts'
 import { useI18nStore } from '@/stores/i18nStore'
-import { getOperatorChartData } from '@/mock/dashboard'
-import type { OperatorChartData } from '@/mock/dashboard'
+import {
+  getOperatorChartData,
+  getPowerProfitMonthData,
+  getPowerProfitYearData,
+  getPowerProfitCumulativeData,
+} from '@/mock/dashboard'
+import type { OperatorChartData, PowerProfitDataPoint } from '@/mock/dashboard'
 import StationControlPanel from './StationControlPanel.vue'
 
 const i18n = useI18nStore()
 
 const activeTab = ref<'market' | 'autoPreview'>('market')
 const ppPeriod = ref('day')
-const ppDate = ref(new Date().toISOString().slice(0, 10))
+
+const now = new Date()
+const currentYear = now.getFullYear()
+const ppDate = ref(now.toISOString().slice(0, 10))
+const ppMonth = ref(now.toISOString().slice(0, 7))
+const ppYear = ref(currentYear)
 
 const chartData = ref<OperatorChartData>({ market: [], powerProfit: [] })
+const ppData = ref<PowerProfitDataPoint[]>([])
 
 const marketChartRef = ref<HTMLElement | null>(null)
 const powerProfitChartRef = ref<HTMLElement | null>(null)
@@ -125,26 +157,67 @@ const powerProfitChartRef = ref<HTMLElement | null>(null)
 const marketChart = shallowRef<echarts.ECharts | null>(null)
 const powerProfitChart = shallowRef<echarts.ECharts | null>(null)
 
+// === Metric label keys based on period ===
+const chargeLabel = computed(() => {
+  const map: Record<string, string> = {
+    day: 'todayCharge',
+    month: 'monthlyCharge',
+    year: 'annualCharge',
+    cumulative: 'totalCharge',
+  }
+  return map[ppPeriod.value] || 'todayCharge'
+})
+
+const dischargeLabel = computed(() => {
+  const map: Record<string, string> = {
+    day: 'todayDischarge',
+    month: 'monthlyDischarge',
+    year: 'annualDischarge',
+    cumulative: 'totalDischarge',
+  }
+  return map[ppPeriod.value] || 'todayDischarge'
+})
+
+const comparisonLabel = computed(() => {
+  const map: Record<string, string> = {
+    day: 'vsYesterday',
+    month: 'vsLastMonth',
+    year: 'vsLastYear',
+    cumulative: 'vsLastYear',
+  }
+  return map[ppPeriod.value] || 'vsYesterday'
+})
+
+// === Format helpers ===
+function formatEnergy(val: number): string {
+  if (ppPeriod.value === 'day') return val.toFixed(2)
+  if (ppPeriod.value === 'month') return val.toFixed(1)
+  return Math.round(val).toLocaleString()
+}
+
+function formatDollar(val: number): string {
+  if (ppPeriod.value === 'day') return val.toFixed(0)
+  return Math.round(val).toLocaleString()
+}
+
+// === Market metric computeds ===
 const currentSpotPrice = computed(() => {
   const data = chartData.value.market
-  const now = new Date()
-  const currentHour = (now.getUTCHours() + 10) % 24
+  const currentHour = (new Date().getUTCHours() + 10) % 24
   const current = data[currentHour]
   return current?.historicalPrice ?? current?.predictedPrice ?? 0
 })
 
 const currentDemandValue = computed(() => {
   const data = chartData.value.market
-  const now = new Date()
-  const currentHour = (now.getUTCHours() + 10) % 24
+  const currentHour = (new Date().getUTCHours() + 10) % 24
   const current = data[currentHour]
   return Math.round(current?.demand ?? current?.predictedDemand ?? 0)
 })
 
 const forecastPriceValue = computed(() => {
   const data = chartData.value.market
-  const now = new Date()
-  const currentHour = (now.getUTCHours() + 10) % 24
+  const currentHour = (new Date().getUTCHours() + 10) % 24
   const nextIdx = Math.min(currentHour + 1, 23)
   const next = data[nextIdx]
   return next?.predictedPrice ?? next?.historicalPrice ?? 0
@@ -152,32 +225,53 @@ const forecastPriceValue = computed(() => {
 
 const forecastDemandValue = computed(() => {
   const data = chartData.value.market
-  const now = new Date()
-  const currentHour = (now.getUTCHours() + 10) % 24
+  const currentHour = (new Date().getUTCHours() + 10) % 24
   const nextIdx = Math.min(currentHour + 1, 23)
   const next = data[nextIdx]
   return Math.round(next?.predictedDemand ?? next?.demand ?? 0)
 })
 
+// === Power & Profit metric computeds (use ppData) ===
 const totalCharge = computed(() =>
-  chartData.value.powerProfit.reduce((sum, d) => sum + Math.abs(d.chargeEnergy), 0)
+  ppData.value.reduce((sum, d) => sum + Math.abs(d.chargeEnergy), 0)
 )
 const totalChargeCost = computed(() =>
-  chartData.value.powerProfit.reduce((sum, d) => sum + d.chargeCost, 0)
+  ppData.value.reduce((sum, d) => sum + d.chargeCost, 0)
 )
 const totalDischarge = computed(() =>
-  chartData.value.powerProfit.reduce((sum, d) => sum + d.dischargeEnergy, 0)
+  ppData.value.reduce((sum, d) => sum + d.dischargeEnergy, 0)
 )
 const totalDischargeRevenue = computed(() =>
-  chartData.value.powerProfit.reduce((sum, d) => sum + d.dischargeRevenue, 0)
+  ppData.value.reduce((sum, d) => sum + d.dischargeRevenue, 0)
 )
 const netProfitTotal = computed(() =>
-  chartData.value.powerProfit.reduce((sum, d) => sum + d.netProfit, 0)
+  ppData.value.reduce((sum, d) => sum + d.netProfit, 0)
 )
-const vsYesterday = computed(() => {
-  return 12.5
+const vsComparison = computed(() => {
+  const map: Record<string, number> = {
+    day: 12.5,
+    month: 8.3,
+    year: 15.2,
+    cumulative: 22.1,
+  }
+  return map[ppPeriod.value] ?? 12.5
 })
 
+// === Load Power & Profit data based on period ===
+function loadPPData() {
+  if (ppPeriod.value === 'day') {
+    ppData.value = chartData.value.powerProfit
+  } else if (ppPeriod.value === 'month') {
+    const [y, m] = ppMonth.value.split('-').map(Number)
+    ppData.value = getPowerProfitMonthData(y, m)
+  } else if (ppPeriod.value === 'year') {
+    ppData.value = getPowerProfitYearData(ppYear.value)
+  } else {
+    ppData.value = getPowerProfitCumulativeData()
+  }
+}
+
+// === Chart builders ===
 function buildMarketOption(): echarts.EChartsOption {
   const data = chartData.value.market
   const times = data.map(d => d.time)
@@ -295,8 +389,18 @@ function buildMarketOption(): echarts.EChartsOption {
 }
 
 function buildPowerProfitOption(): echarts.EChartsOption {
-  const data = chartData.value.powerProfit
+  const data = ppData.value
   const times = data.map(d => d.time)
+  const period = ppPeriod.value
+
+  // Adjust xAxis label interval based on period
+  let xAxisInterval = 2
+  if (period === 'day') xAxisInterval = 2
+  else if (period === 'month') xAxisInterval = 2
+  else xAxisInterval = 0
+
+  // Tooltip value formatting based on period
+  const energyDecimals = period === 'day' ? 2 : period === 'month' ? 1 : 0
 
   return {
     backgroundColor: 'transparent',
@@ -313,9 +417,9 @@ function buildPowerProfitOption(): echarts.EChartsOption {
           const isEnergy = p.seriesName.includes('MWh')
           let val: string
           if (isEnergy) {
-            val = `${Math.abs(p.value).toFixed(2)} MWh`
+            val = `${Math.abs(p.value).toFixed(energyDecimals)} MWh`
           } else {
-            val = `$${Math.abs(p.value).toFixed(0)}`
+            val = `$${Math.abs(p.value).toLocaleString()}`
           }
           lines.push(`${p.marker} ${p.seriesName}: ${val}`)
         })
@@ -334,7 +438,7 @@ function buildPowerProfitOption(): echarts.EChartsOption {
     xAxis: {
       type: 'category', data: times,
       axisLine: { lineStyle: { color: 'rgba(255,255,255,0.2)' } },
-      axisLabel: { color: 'rgba(255,255,255,0.6)', interval: 2 },
+      axisLabel: { color: 'rgba(255,255,255,0.6)', interval: xAxisInterval },
     },
     yAxis: [
       {
@@ -391,6 +495,7 @@ function buildPowerProfitOption(): echarts.EChartsOption {
   }
 }
 
+// === Chart init helpers ===
 function initMarketChart() {
   if (!marketChartRef.value) return
   marketChart.value = echarts.init(marketChartRef.value)
@@ -403,6 +508,18 @@ function initPowerProfitChart() {
   powerProfitChart.value.setOption(buildPowerProfitOption())
 }
 
+function refreshPPChart() {
+  loadPPData()
+  nextTick(() => {
+    if (powerProfitChart.value) {
+      powerProfitChart.value.setOption(buildPowerProfitOption(), true)
+    } else {
+      initPowerProfitChart()
+    }
+  })
+}
+
+// === Watchers ===
 watch(() => i18n.locale, () => {
   nextTick(() => {
     marketChart.value?.setOption(buildMarketOption(), true)
@@ -416,6 +533,30 @@ watch(activeTab, (newTab) => {
   }
 })
 
+// Watch period change: reset picker defaults + reload data + redraw chart
+watch(ppPeriod, (newPeriod) => {
+  const today = new Date()
+  if (newPeriod === 'day') {
+    ppDate.value = today.toISOString().slice(0, 10)
+  } else if (newPeriod === 'month') {
+    ppMonth.value = today.toISOString().slice(0, 7)
+  } else if (newPeriod === 'year') {
+    ppYear.value = today.getFullYear()
+  }
+  refreshPPChart()
+})
+
+// Watch date/month/year value changes to reload data
+watch(ppDate, () => {
+  if (ppPeriod.value === 'day') refreshPPChart()
+})
+watch(ppMonth, () => {
+  if (ppPeriod.value === 'month') refreshPPChart()
+})
+watch(ppYear, () => {
+  if (ppPeriod.value === 'year') refreshPPChart()
+})
+
 function handleResize() {
   marketChart.value?.resize()
   powerProfitChart.value?.resize()
@@ -423,6 +564,7 @@ function handleResize() {
 
 onMounted(() => {
   chartData.value = getOperatorChartData()
+  loadPPData()
   initMarketChart()
   initPowerProfitChart()
   window.addEventListener('resize', handleResize)
@@ -560,6 +702,15 @@ onUnmounted(() => {
   color-scheme: dark;
 }
 .pp-date-input:focus { border-color: var(--border-focus); }
+.pp-year-input {
+  width: 90px;
+  -moz-appearance: textfield;
+}
+.pp-year-input::-webkit-outer-spin-button,
+.pp-year-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
 
 .pp-metric-cards {
   display: grid;
