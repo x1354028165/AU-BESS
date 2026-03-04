@@ -107,46 +107,42 @@
         </button>
       </div>
 
-      <div class="settings-list">
-        <div class="setting-row">
-          <span class="setting-label">{{ i18n.t('chargeStopSOC') }}</span>
-          <span class="divider"></span>
-          <span class="setting-value">
+      <div class="settings-grid">
+        <div class="settings-card">
+          <div class="settings-card-label">{{ i18n.t('chargeStopSOC') }}</div>
+          <div class="settings-card-value">
             <input v-if="isEditMode" v-model.number="chargeStopSOC" type="number" min="0" max="100" class="settings-input" />
             <span v-else>{{ chargeStopSOC }}%</span>
-          </span>
+          </div>
         </div>
-        <div class="setting-row">
-          <span class="setting-label">{{ i18n.t('dischargeStopSOC') }}</span>
-          <span class="divider"></span>
-          <span class="setting-value">
+        <div class="settings-card">
+          <div class="settings-card-label">{{ i18n.t('dischargeStopSOC') }}</div>
+          <div class="settings-card-value">
             <input v-if="isEditMode" v-model.number="dischargeStopSOC" type="number" min="0" max="100" class="settings-input" />
             <span v-else>{{ dischargeStopSOC }}%</span>
-          </span>
+          </div>
         </div>
-        <div class="setting-row">
-          <span class="setting-label">{{ i18n.t('autoCharge') }}</span>
-          <span class="divider"></span>
-          <span class="setting-value">
+        <div class="settings-card">
+          <div class="settings-card-label">{{ i18n.t('autoCharge') }}</div>
+          <div class="settings-card-value">
             <template v-if="isEditMode">
               <input v-model="autoChargeStart" type="time" class="settings-input time-input" />
               <span class="time-separator">-</span>
               <input v-model="autoChargeEnd" type="time" class="settings-input time-input" />
             </template>
             <span v-else class="settings-time-bar charge-time-bar">{{ autoChargeStart }} - {{ autoChargeEnd }}</span>
-          </span>
+          </div>
         </div>
-        <div class="setting-row">
-          <span class="setting-label">{{ i18n.t('autoDischarge') }}</span>
-          <span class="divider"></span>
-          <span class="setting-value">
+        <div class="settings-card">
+          <div class="settings-card-label">{{ i18n.t('autoDischarge') }}</div>
+          <div class="settings-card-value">
             <template v-if="isEditMode">
               <input v-model="autoDischargeStart" type="time" class="settings-input time-input" />
               <span class="time-separator">-</span>
               <input v-model="autoDischargeEnd" type="time" class="settings-input time-input" />
             </template>
             <span v-else class="settings-time-bar discharge-time-bar">{{ autoDischargeStart }} - {{ autoDischargeEnd }}</span>
-          </span>
+          </div>
         </div>
       </div>
     </div>
@@ -1181,50 +1177,33 @@ function toggleEditMode() {
   background: #e6ac00;
 }
 
-/* === Settings 竖向列表 + 竖线对齐 === */
-.settings-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
+/* === Settings 2x2 Grid === */
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
-.setting-row {
-  display: flex;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+.settings-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 12px 14px;
 }
 
-.setting-row:last-child {
-  border-bottom: none;
+.settings-card-label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 6px;
 }
 
-.setting-label {
-  width: 140px;
-  flex-shrink: 0;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.55);
-  text-align: left;
-}
-
-.divider {
-  width: 1px;
-  height: 20px;
-  background: rgba(255, 255, 255, 0.15);
-  flex-shrink: 0;
-  margin: 0 16px;
-}
-
-.setting-value {
-  font-size: 14px;
-  font-weight: 600;
+.settings-card-value {
+  font-size: 16px;
+  font-weight: 700;
   color: #fff;
-  display: flex;
-  align-items: center;
-  gap: 6px;
 }
 
-.setting-value .settings-input {
+.settings-card-value .settings-input {
   width: 60px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
@@ -1234,8 +1213,8 @@ function toggleEditMode() {
   font-size: 14px;
 }
 
-.setting-value .time-input {
-  width: 90px;
+.settings-card-value .time-input {
+  width: 80px;
 }
 
 </style>
