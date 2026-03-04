@@ -574,6 +574,11 @@ function editSettingsFromAutoConfirm() {
 function confirmAutoOff() {
   isAutoMode.value = false
   showAutoOffConfirm.value = false
+  // 关闭Auto后强制停止运行，回到idle
+  const state = stationStates[selectedStationId.value]
+  if (state) {
+    state.runStatus = 'idle'
+  }
 }
 
 function handleCharge() {
