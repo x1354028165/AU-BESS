@@ -28,7 +28,7 @@
     <div class="control-center">
       <button
         class="action-btn charge-btn"
-        :disabled="isAutoMode || currentStation.runStatus === 'charging'"
+        :disabled="isAutoMode || currentStation.runStatus === 'discharging'"
         @click="handleCharge"
       >
         {{ i18n.t('charge') }}
@@ -44,7 +44,7 @@
 
       <button
         class="action-btn discharge-btn"
-        :disabled="isAutoMode || currentStation.runStatus === 'discharging'"
+        :disabled="isAutoMode || currentStation.runStatus === 'charging'"
         @click="handleDischarge"
       >
         {{ i18n.t('discharge') }}
@@ -223,10 +223,10 @@ const currentStation = computed<CurrentStationView>(() => {
 
 // 电价圈颜色根据价格变化
 const priceCircleClass = computed(() => {
-  const price = currentStation.value.currentSpotPrice
-  if (price > 100) return 'price-high'       // 红色系 - 高价
-  if (price > 0) return 'price-normal'        // 蓝色系 - 正常
-  return 'price-negative'                      // 绿色系 - 负电价
+  const status = currentStation.value.runStatus
+  if (status === 'charging') return 'price-charging'       // 绿色 - 充电中
+  if (status === 'discharging') return 'price-discharging'  // 黄色 - 放电中
+  return 'price-idle'                                        // 蓝色 - 待机
 })
 
 // SOC颜色
@@ -461,17 +461,17 @@ function toggleEditMode() {
   transition: all var(--transition-normal);
 }
 
-.price-circle.price-high {
-  background: radial-gradient(circle, #ff4757, #c0392b);
-  box-shadow: 0 0 30px rgba(255, 71, 87, 0.4), 0 0 60px rgba(255, 71, 87, 0.15);
+.price-circle.price-discharging {
+  background: radial-gradient(circle, #ffd700, #e6ac00);
+  box-shadow: 0 0 30px rgba(255, 215, 0, 0.4), 0 0 60px rgba(255, 215, 0, 0.15);
 }
 
-.price-circle.price-normal {
+.price-circle.price-idle {
   background: radial-gradient(circle, #4a90e2, #2c5aa0);
   box-shadow: 0 0 30px rgba(74, 144, 226, 0.4), 0 0 60px rgba(74, 144, 226, 0.15);
 }
 
-.price-circle.price-negative {
+.price-circle.price-charging {
   background: radial-gradient(circle, #00cc6a, #00ff88);
   box-shadow: 0 0 30px rgba(0, 255, 136, 0.4), 0 0 60px rgba(0, 255, 136, 0.15);
 }
