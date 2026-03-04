@@ -233,6 +233,30 @@
     </Transition>
   </Teleport>
 
+
+  <!-- Auto关闭确认弹窗 -->
+  <Teleport to="body">
+    <Transition name="fade">
+      <div v-if="showAutoOffConfirm" class="stop-confirm-overlay" @click.self="showAutoOffConfirm = false">
+        <div class="op-confirm-modal">
+          <div class="op-confirm-header">
+            <div class="op-confirm-icon-wrap" style="background: rgba(255,165,0,0.12); box-shadow: 0 4px 12px rgba(255,165,0,0.15);">
+              <span>🔄</span>
+            </div>
+            <h3 class="op-confirm-title">{{ i18n.t('confirmDisableAuto') }}</h3>
+          </div>
+          <p style="color: rgba(255,255,255,0.6); font-size: 13px; line-height: 1.8; margin: 0 0 20px;">
+            {{ i18n.t('confirmDisableAutoDesc') }}
+          </p>
+          <div class="op-confirm-actions">
+            <button class="btn-cancel" @click="showAutoOffConfirm = false">Cancel</button>
+            <button class="btn-confirm-op charge" @click="confirmAutoOff">{{ i18n.t('confirmDisable') }}</button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
+
   <!-- Settings 设置弹窗 (v2风格全屏modal) -->
   <Teleport to="body">
     <Transition name="fade">
@@ -487,6 +511,7 @@ const estimatedCost = computed(() => {
 
 // 是否可以停止（充电或放电中才能停）
 const canStop = computed(() => {
+  if (isAutoMode.value) return false
   const status = currentStation.value.runStatus
   return status === 'charging' || status === 'discharging'
 })
@@ -501,6 +526,7 @@ const socColorClass = computed(() => {
 // === 状态机交互 ===
 
 const showAutoOnConfirm = ref(false)
+const showAutoOffConfirm = ref(false)
 
 function toggleAutoMode() {
   const state = stationStates[selectedStationId.value]
@@ -515,8 +541,8 @@ function toggleAutoMode() {
     // 开启Auto → 弹确认弹窗(v2风格)
     showAutoOnConfirm.value = true
   } else {
-    // 关闭Auto → 直接关，不弹窗
-    isAutoMode.value = false
+    // 关闭Auto → 弹确认弹窗
+    showAutoOffConfirm.value = true
   }
 }
 
@@ -528,6 +554,11 @@ function confirmEnableAuto() {
 function editSettingsFromAutoConfirm() {
   showAutoOnConfirm.value = false
   toggleEditMode()
+}
+
+function confirmAutoOff() {
+  isAutoMode.value = false
+  showAutoOffConfirm.value = false
 }
 
 function handleCharge() {
