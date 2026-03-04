@@ -14,7 +14,7 @@
         class="nav-link"
         :class="{ active: isActive(item.path) }"
       >
-        {{ item.title }}
+        {{ i18n.t(item.title) }}
       </router-link>
     </nav>
 
@@ -181,8 +181,8 @@ function handleLogout() {
 }
 
 .nav-link.active {
-  color: #00ff88;
-  border-bottom-color: #00ff88;
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
 }
 
 /* === Right Actions === */
@@ -196,7 +196,7 @@ function handleLogout() {
 .lang-btn {
   font-size: 12px;
   font-weight: 600;
-  color: #00ff88;
+  color: var(--color-primary);
   cursor: pointer;
   padding: 4px 10px;
   border: 1px solid rgba(0, 255, 136, 0.2);
@@ -213,7 +213,7 @@ function handleLogout() {
 .role-badge {
   font-size: 12px;
   font-weight: 600;
-  color: #00ff88;
+  color: var(--color-primary);
   padding: 4px 12px;
   border: 1px solid rgba(0, 255, 136, 0.3);
   border-radius: 6px;
@@ -239,7 +239,7 @@ function handleLogout() {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #00ff88, #00aaff);
+  background: linear-gradient(135deg, var(--color-primary), #00aaff);
   display: flex;
   align-items: center;
   justify-content: center;

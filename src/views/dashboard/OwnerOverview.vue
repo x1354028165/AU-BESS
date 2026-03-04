@@ -234,7 +234,7 @@ function powerClass(power: number): string {
   align-items: center;
   gap: 14px;
   padding: 20px;
-  background: var(--bg-card) !important;
+  background: var(--bg-card);
   backdrop-filter: blur(10px);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
@@ -242,7 +242,7 @@ function powerClass(power: number): string {
 }
 
 .metric-card:hover {
-  background: var(--bg-card-hover) !important;
+  background: var(--bg-card-hover);
   border-color: var(--border-hover);
   box-shadow: var(--shadow-elevated);
 }
@@ -269,7 +269,7 @@ function powerClass(power: number): string {
 
 .icon-capacity {
   background: rgba(0, 255, 136, 0.12);
-  color: #00ff88;
+  color: var(--color-primary);
 }
 
 .icon-power {
@@ -322,7 +322,7 @@ function powerClass(power: number): string {
   margin-left: 4px;
 }
 
-.val-positive { color: #00ff88; }
+.val-positive { color: var(--color-primary); }
 .val-negative { color: #ff4757; }
 .val-alert    { color: #ff4757; }
 .val-charging { color: #007aff; }
@@ -366,7 +366,7 @@ function powerClass(power: number): string {
   flex-direction: column;
   gap: 12px;
   padding: 18px;
-  background: var(--bg-card) !important;
+  background: var(--bg-card);
   backdrop-filter: blur(10px);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
@@ -374,7 +374,7 @@ function powerClass(power: number): string {
 }
 
 .station-card:hover {
-  background: var(--bg-card-hover) !important;
+  background: var(--bg-card-hover);
   border-color: var(--border-hover);
   box-shadow: var(--shadow-elevated);
   transform: translateY(-2px);
@@ -413,7 +413,7 @@ function powerClass(power: number): string {
 
 .comm-badge.online {
   background: rgba(0, 255, 136, 0.15);
-  color: #00ff88;
+  color: var(--color-primary);
 }
 
 .comm-badge.offline {
@@ -484,7 +484,7 @@ function powerClass(power: number): string {
   color: var(--text-tertiary);
 }
 
-.soc-label .soc-high { color: #00ff88; }
+.soc-label .soc-high { color: var(--color-primary); }
 .soc-label .soc-mid  { color: #ffa502; }
 .soc-label .soc-low  { color: #ff4757; }
 
@@ -501,7 +501,7 @@ function powerClass(power: number): string {
   transition: width 0.6s ease;
 }
 
-.soc-fill.soc-high { background: #00ff88; }
+.soc-fill.soc-high { background: var(--color-primary); }
 .soc-fill.soc-mid  { background: #ffa502; }
 .soc-fill.soc-low  { background: #ff4757; }
 

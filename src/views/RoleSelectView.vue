@@ -193,9 +193,9 @@ function handleLogout() {
 
 /* Content wrapper */
 .content-wrapper {
-  width: 100% !important;
-  max-width: 100% !important;
-  align-items: stretch !important;
+  width: 100%;
+  max-width: 100%;
+  align-items: stretch;
   position: relative;
   z-index: 2;
   min-height: 100vh;
@@ -247,7 +247,7 @@ function handleLogout() {
 }
 
 .lang-text.active {
-  color: #00ff88;
+  color: var(--color-primary);
   font-weight: 600;
 }
 
@@ -350,7 +350,7 @@ function handleLogout() {
 .role-icon svg {
   width: 32px;
   height: 32px;
-  color: #00ff88;
+  color: var(--color-primary);
 }
 
 /* Card Text */
@@ -408,7 +408,7 @@ function handleLogout() {
 .feature-list li .check svg {
   width: 11px;
   height: 11px;
-  color: #00ff88;
+  color: var(--color-primary);
 }
 
 /* Action Button */
@@ -417,7 +417,7 @@ function handleLogout() {
   padding: 13px 0;
   border: none;
   border-radius: 10px;
-  background: #00ff88;
+  background: var(--color-primary);
   color: #000;
   font-size: 15px;
   font-weight: 600;
@@ -449,7 +449,7 @@ function handleLogout() {
   transition: color 0.3s;
 }
 
-.footer a:hover { color: #00ff88; }
+.footer a:hover { color: var(--color-primary); }
 
 /* Entrance Animation */
 @keyframes fadeInUp {

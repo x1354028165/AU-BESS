@@ -493,7 +493,7 @@ onUnmounted(() => {
 
 .icon-charge {
   background: rgba(0, 255, 136, 0.12);
-  color: #00ff88;
+  color: var(--color-primary);
 }
 
 .icon-discharge {
@@ -503,7 +503,7 @@ onUnmounted(() => {
 
 .icon-profit {
   background: rgba(0, 255, 136, 0.12);
-  color: #00ff88;
+  color: var(--color-primary);
 }
 
 .icon-loss {
@@ -547,7 +547,7 @@ onUnmounted(() => {
 }
 
 .val-positive {
-  color: #00ff88;
+  color: var(--color-primary);
 }
 
 .val-negative {

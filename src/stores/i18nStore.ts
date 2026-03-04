@@ -66,6 +66,15 @@ const messages: Record<string, Record<Locale, string>> = {
   chartsPlaceholder: { en: 'Charts Area - Phase 3', zh: '图表区域 - Phase 3' },
 
   // 角色
+
+  // Navigation menu
+  navOverview: { en: 'Overview', zh: '概览' },
+  navStation: { en: 'Station', zh: '电站' },
+  navFaultAlarm: { en: 'Fault Alarm', zh: '故障告警' },
+  navClients: { en: 'Clients', zh: '客户' },
+  navReports: { en: 'Reports', zh: '报表' },
+  navLogs: { en: 'Logs', zh: '日志' },
+
   owner: { en: 'Owner', zh: '业主' },
   operator: { en: 'Operator', zh: '运维方' },
 
