@@ -1,19 +1,105 @@
 <template>
-  <div class="operator-page">
-    <!-- === 电站调度控制面板 === -->
-    <StationControlPanel />
+  <div class="operator-dispatch">
+    <!-- Upper Left: Station Control Panel -->
+    <div class="left-panel">
+      <StationControlPanel />
+    </div>
 
-    <!-- === Market 图表 === -->
-    <section class="chart-section">
-      <h2 class="chart-title">{{ i18n.t('marketOverview') }}</h2>
-      <div ref="marketChartRef" class="chart-container"></div>
-    </section>
+    <!-- Upper Right: Market Area -->
+    <div class="right-panel">
+      <div class="market-card">
+        <!-- Tab: Market | Auto Preview -->
+        <div class="market-tabs">
+          <button class="market-tab" :class="{ active: activeTab === 'market' }" @click="activeTab = 'market'">
+            {{ i18n.t('market') }}
+          </button>
+          <button class="market-tab" :class="{ active: activeTab === 'autoPreview' }" @click="activeTab = 'autoPreview'">
+            {{ i18n.t('autoPreview') }}
+          </button>
+        </div>
 
-    <!-- === Power & Profit 图表 === -->
-    <section class="chart-section">
-      <h2 class="chart-title">{{ i18n.t('bessOperations') }}</h2>
-      <div ref="powerProfitChartRef" class="chart-container"></div>
-    </section>
+        <!-- Market Tab -->
+        <template v-if="activeTab === 'market'">
+          <div class="metric-cards">
+            <div class="metric-card">
+              <div class="metric-label">{{ i18n.t('currentSpotPrice') }}</div>
+              <div class="metric-sublabel">$/MWh</div>
+              <div class="metric-value price-value-text">${{ currentSpotPrice.toFixed(2) }}</div>
+            </div>
+            <div class="metric-divider"></div>
+            <div class="metric-card">
+              <div class="metric-label">{{ i18n.t('currentDemand') }}</div>
+              <div class="metric-sublabel">MW</div>
+              <div class="metric-value demand-value-text">{{ currentDemandValue.toLocaleString() }}</div>
+            </div>
+            <div class="metric-divider"></div>
+            <div class="metric-card">
+              <div class="metric-label">{{ i18n.t('forecastPrice') }}</div>
+              <div class="metric-sublabel">$/MWh · {{ i18n.t('next30min') }}</div>
+              <div class="metric-value price-value-text">${{ forecastPriceValue.toFixed(2) }}</div>
+            </div>
+            <div class="metric-divider"></div>
+            <div class="metric-card">
+              <div class="metric-label">{{ i18n.t('forecastDemand') }}</div>
+              <div class="metric-sublabel">MW · {{ i18n.t('next30min') }}</div>
+              <div class="metric-value demand-value-text">{{ forecastDemandValue.toLocaleString() }}</div>
+            </div>
+          </div>
+          <div ref="marketChartRef" class="chart-container"></div>
+        </template>
+
+        <!-- Auto Preview placeholder -->
+        <template v-else>
+          <div class="coming-soon">
+            <span class="coming-soon-icon">🚀</span>
+            <span>{{ i18n.t('comingSoon') }}</span>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <!-- Bottom: Power & Profit full-width -->
+    <div class="bottom-panel">
+      <div class="power-profit-card">
+        <div class="pp-header">
+          <h2 class="pp-title">{{ i18n.t('powerAndProfit') }}</h2>
+          <div class="pp-controls">
+            <select v-model="ppPeriod" class="pp-select">
+              <option value="day">{{ i18n.t('day') }}</option>
+              <option value="month">{{ i18n.t('month') }}</option>
+              <option value="year">{{ i18n.t('year') }}</option>
+              <option value="cumulative">{{ i18n.t('cumulative') }}</option>
+            </select>
+            <input v-model="ppDate" type="date" class="pp-date-input" />
+          </div>
+        </div>
+
+        <div class="pp-metric-cards">
+          <div class="pp-metric-card">
+            <div class="pp-metric-title">{{ i18n.t('todayCharge') }}</div>
+            <div class="pp-metric-main">{{ totalCharge.toFixed(2) }} MWh</div>
+            <div class="pp-metric-sub">{{ i18n.t('cost') }} ${{ Math.abs(totalChargeCost).toFixed(0) }}</div>
+          </div>
+          <div class="pp-metric-card">
+            <div class="pp-metric-title">{{ i18n.t('todayDischarge') }}</div>
+            <div class="pp-metric-main">{{ totalDischarge.toFixed(2) }} MWh</div>
+            <div class="pp-metric-sub">{{ i18n.t('revenue') }} ${{ totalDischargeRevenue.toFixed(0) }}</div>
+          </div>
+          <div class="pp-metric-card">
+            <div class="pp-metric-title">{{ i18n.t('netProfit') }}</div>
+            <div class="pp-metric-main profit-value">${{ netProfitTotal.toFixed(0) }}</div>
+            <div class="pp-metric-sub">
+              {{ i18n.t('vsYesterday') }}
+              <span class="pp-trend" :class="vsYesterday >= 0 ? 'trend-up' : 'trend-down'">
+                {{ vsYesterday >= 0 ? '↑' : '↓' }}{{ Math.abs(vsYesterday) }}%
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div ref="powerProfitChartRef" class="chart-container"></div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -27,18 +113,52 @@ import StationControlPanel from './StationControlPanel.vue'
 
 const i18n = useI18nStore()
 
-// === 数据 ===
+const activeTab = ref<'market' | 'autoPreview'>('market')
+const ppPeriod = ref('day')
+const ppDate = ref(new Date().toISOString().slice(0, 10))
+
 const chartData = ref<OperatorChartData>({ market: [], powerProfit: [] })
 
-// === DOM refs ===
 const marketChartRef = ref<HTMLElement | null>(null)
 const powerProfitChartRef = ref<HTMLElement | null>(null)
 
-// === ECharts 实例（shallowRef 避免 Vue 代理） ===
 const marketChart = shallowRef<echarts.ECharts | null>(null)
 const powerProfitChart = shallowRef<echarts.ECharts | null>(null)
 
-// === 计算属性（保留用于图表 tooltip 等潜在需求） ===
+const currentSpotPrice = computed(() => {
+  const data = chartData.value.market
+  const now = new Date()
+  const currentHour = (now.getUTCHours() + 10) % 24
+  const current = data[currentHour]
+  return current?.historicalPrice ?? current?.predictedPrice ?? 0
+})
+
+const currentDemandValue = computed(() => {
+  const data = chartData.value.market
+  const now = new Date()
+  const currentHour = (now.getUTCHours() + 10) % 24
+  const current = data[currentHour]
+  return Math.round(current?.demand ?? current?.predictedDemand ?? 0)
+})
+
+const forecastPriceValue = computed(() => {
+  const data = chartData.value.market
+  const now = new Date()
+  const currentHour = (now.getUTCHours() + 10) % 24
+  const nextIdx = Math.min(currentHour + 1, 23)
+  const next = data[nextIdx]
+  return next?.predictedPrice ?? next?.historicalPrice ?? 0
+})
+
+const forecastDemandValue = computed(() => {
+  const data = chartData.value.market
+  const now = new Date()
+  const currentHour = (now.getUTCHours() + 10) % 24
+  const nextIdx = Math.min(currentHour + 1, 23)
+  const next = data[nextIdx]
+  return Math.round(next?.predictedDemand ?? next?.demand ?? 0)
+})
+
 const totalCharge = computed(() =>
   chartData.value.powerProfit.reduce((sum, d) => sum + Math.abs(d.chargeEnergy), 0)
 )
@@ -55,11 +175,9 @@ const netProfitTotal = computed(() =>
   chartData.value.powerProfit.reduce((sum, d) => sum + d.netProfit, 0)
 )
 const vsYesterday = computed(() => {
-  // Mock: +12.5% vs yesterday
   return 12.5
 })
 
-// === 构建 Market 图表 option ===
 function buildMarketOption(): echarts.EChartsOption {
   const data = chartData.value.market
   const times = data.map(d => d.time)
@@ -102,22 +220,12 @@ function buildMarketOption(): echarts.EChartsOption {
       textStyle: { color: 'rgba(255,255,255,0.7)' },
       top: 10,
     },
-    grid: {
-      left: 60,
-      right: 60,
-      bottom: 40,
-      top: 50,
-      containLabel: true,
-    },
+    grid: { left: 60, right: 60, bottom: 40, top: 50, containLabel: true },
     xAxis: {
       type: 'category',
       data: times,
       axisLine: { show: false },
-      axisLabel: {
-        color: 'rgba(255,255,255,0.7)',
-        interval: 1,
-        fontSize: 12,
-      },
+      axisLabel: { color: 'rgba(255,255,255,0.7)', interval: 1, fontSize: 12 },
       splitLine: { show: false },
     },
     yAxis: [
@@ -128,14 +236,8 @@ function buildMarketOption(): echarts.EChartsOption {
         position: 'left',
         scale: true,
         axisLine: { show: false },
-        axisLabel: {
-          color: 'rgba(255,255,255,0.7)',
-          formatter: '${value}',
-        },
-        splitLine: {
-          show: true,
-          lineStyle: { color: 'rgba(255,255,255,0.05)', type: 'dashed', width: 1 },
-        },
+        axisLabel: { color: 'rgba(255,255,255,0.7)', formatter: '${value}' },
+        splitLine: { show: true, lineStyle: { color: 'rgba(255,255,255,0.05)', type: 'dashed', width: 1 } },
       },
       {
         type: 'value',
@@ -144,10 +246,7 @@ function buildMarketOption(): echarts.EChartsOption {
         position: 'right',
         scale: true,
         axisLine: { show: false },
-        axisLabel: {
-          color: 'rgba(255,255,255,0.7)',
-          formatter: '{value} MW',
-        },
+        axisLabel: { color: 'rgba(255,255,255,0.7)', formatter: '{value} MW' },
         splitLine: { show: false },
       },
     ],
@@ -156,9 +255,7 @@ function buildMarketOption(): echarts.EChartsOption {
         name: i18n.t('historicalPrice'),
         type: 'line',
         data: historicalPrices,
-        smooth: true,
-        symbol: 'circle',
-        symbolSize: 4,
+        smooth: true, symbol: 'circle', symbolSize: 4,
         lineStyle: { color: '#00ff88', width: 3 },
         itemStyle: { color: '#00ff88' },
         areaStyle: {
@@ -168,37 +265,19 @@ function buildMarketOption(): echarts.EChartsOption {
           ]),
         },
         markLine: currentIdx >= 0 ? {
-          symbol: 'none',
-          silent: true,
-          data: [
-            {
-              xAxis: currentIdx,
-              lineStyle: { color: 'rgba(255,255,255,0.4)', type: 'dashed', width: 2 },
-              label: { show: false },
-            },
-          ],
+          symbol: 'none', silent: true,
+          data: [{ xAxis: currentIdx, lineStyle: { color: 'rgba(255,255,255,0.4)', type: 'dashed', width: 2 }, label: { show: false } }],
         } : undefined,
       },
       {
-        name: i18n.t('demand'),
-        type: 'line',
-        yAxisIndex: 1,
-        data: demands,
-        smooth: true,
-        symbol: 'circle',
-        symbolSize: 4,
-        lineStyle: { color: '#ffd700', width: 2 },
-        itemStyle: { color: '#ffd700' },
+        name: i18n.t('demand'), type: 'line', yAxisIndex: 1, data: demands,
+        smooth: true, symbol: 'circle', symbolSize: 4,
+        lineStyle: { color: '#ffd700', width: 2 }, itemStyle: { color: '#ffd700' },
       },
       {
-        name: i18n.t('predictedPrice'),
-        type: 'line',
-        data: predictedPrices,
-        smooth: true,
-        symbol: 'circle',
-        symbolSize: 4,
-        lineStyle: { color: '#00ff88', width: 2, type: 'dashed' },
-        itemStyle: { color: '#00ff88' },
+        name: i18n.t('predictedPrice'), type: 'line', data: predictedPrices,
+        smooth: true, symbol: 'circle', symbolSize: 4,
+        lineStyle: { color: '#00ff88', width: 2, type: 'dashed' }, itemStyle: { color: '#00ff88' },
         areaStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
             { offset: 0, color: 'rgba(0,255,136,0.15)' },
@@ -207,21 +286,14 @@ function buildMarketOption(): echarts.EChartsOption {
         },
       },
       {
-        name: i18n.t('predictedDemand'),
-        type: 'line',
-        yAxisIndex: 1,
-        data: predictedDemands,
-        smooth: true,
-        symbol: 'circle',
-        symbolSize: 4,
-        lineStyle: { color: '#ffd700', width: 2, type: 'dashed' },
-        itemStyle: { color: '#ffd700' },
+        name: i18n.t('predictedDemand'), type: 'line', yAxisIndex: 1, data: predictedDemands,
+        smooth: true, symbol: 'circle', symbolSize: 4,
+        lineStyle: { color: '#ffd700', width: 2, type: 'dashed' }, itemStyle: { color: '#ffd700' },
       },
     ],
   }
 }
 
-// === 构建 Power & Profit 图表 option ===
 function buildPowerProfitOption(): echarts.EChartsOption {
   const data = chartData.value.powerProfit
   const times = data.map(d => d.time)
@@ -252,43 +324,28 @@ function buildPowerProfitOption(): echarts.EChartsOption {
     },
     legend: {
       data: [
-        i18n.t('chargeMWh'),
-        i18n.t('dischargeMWh'),
-        i18n.t('chargeCost'),
-        i18n.t('dischargeRevenue'),
-        i18n.t('netProfitDollar'),
+        i18n.t('chargeMWh'), i18n.t('dischargeMWh'), i18n.t('chargeCost'),
+        i18n.t('dischargeRevenue'), i18n.t('netProfitDollar'),
       ],
       textStyle: { color: 'rgba(255,255,255,0.7)', fontSize: 11 },
-      top: 0,
-      itemGap: 12,
-      itemWidth: 14,
-      itemHeight: 10,
+      top: 0, itemGap: 12, itemWidth: 14, itemHeight: 10,
     },
-    grid: {
-      left: '3%',
-      right: '4%',
-      bottom: '3%',
-      top: '14%',
-      containLabel: true,
-    },
+    grid: { left: '3%', right: '4%', bottom: '3%', top: '14%', containLabel: true },
     xAxis: {
-      type: 'category',
-      data: times,
+      type: 'category', data: times,
       axisLine: { lineStyle: { color: 'rgba(255,255,255,0.2)' } },
       axisLabel: { color: 'rgba(255,255,255,0.6)', interval: 2 },
     },
     yAxis: [
       {
-        type: 'value',
-        name: 'MWh',
+        type: 'value', name: 'MWh',
         nameTextStyle: { color: 'rgba(255,255,255,0.6)' },
         axisLine: { lineStyle: { color: 'rgba(255,255,255,0.2)' } },
         axisLabel: { color: 'rgba(255,255,255,0.6)' },
         splitLine: { lineStyle: { color: 'rgba(255,255,255,0.06)' } },
       },
       {
-        type: 'value',
-        name: 'AUD ($)',
+        type: 'value', name: 'AUD ($)',
         nameTextStyle: { color: 'rgba(255,255,255,0.6)' },
         axisLine: { lineStyle: { color: 'rgba(255,255,255,0.2)' } },
         axisLabel: { color: 'rgba(255,255,255,0.6)', formatter: '${value}' },
@@ -297,51 +354,32 @@ function buildPowerProfitOption(): echarts.EChartsOption {
     ],
     series: [
       {
-        name: i18n.t('chargeMWh'),
-        type: 'bar',
-        stack: 'energy',
+        name: i18n.t('chargeMWh'), type: 'bar', stack: 'energy',
         data: data.map(d => d.chargeEnergy),
-        itemStyle: { color: 'rgba(0,255,136,0.7)', borderRadius: [0, 0, 3, 3] },
-        barWidth: '35%',
+        itemStyle: { color: 'rgba(0,255,136,0.7)', borderRadius: [0, 0, 3, 3] }, barWidth: '35%',
       },
       {
-        name: i18n.t('dischargeMWh'),
-        type: 'bar',
-        stack: 'energy',
+        name: i18n.t('dischargeMWh'), type: 'bar', stack: 'energy',
         data: data.map(d => d.dischargeEnergy),
-        itemStyle: { color: 'rgba(255,193,7,0.8)', borderRadius: [3, 3, 0, 0] },
-        barWidth: '35%',
+        itemStyle: { color: 'rgba(255,193,7,0.8)', borderRadius: [3, 3, 0, 0] }, barWidth: '35%',
       },
       {
-        name: i18n.t('chargeCost'),
-        type: 'line',
-        yAxisIndex: 1,
+        name: i18n.t('chargeCost'), type: 'line', yAxisIndex: 1,
         data: data.map(d => d.chargeCost),
         lineStyle: { width: 2, color: '#ff6b6b', type: 'dashed' },
-        itemStyle: { color: '#ff6b6b' },
-        symbol: 'none',
-        smooth: true,
+        itemStyle: { color: '#ff6b6b' }, symbol: 'none', smooth: true,
       },
       {
-        name: i18n.t('dischargeRevenue'),
-        type: 'line',
-        yAxisIndex: 1,
+        name: i18n.t('dischargeRevenue'), type: 'line', yAxisIndex: 1,
         data: data.map(d => d.dischargeRevenue),
         lineStyle: { width: 2, color: '#00ff88' },
-        itemStyle: { color: '#00ff88' },
-        symbol: 'none',
-        smooth: true,
+        itemStyle: { color: '#00ff88' }, symbol: 'none', smooth: true,
       },
       {
-        name: i18n.t('netProfitDollar'),
-        type: 'line',
-        yAxisIndex: 1,
+        name: i18n.t('netProfitDollar'), type: 'line', yAxisIndex: 1,
         data: data.map(d => d.netProfit),
         lineStyle: { width: 3, color: '#ffd700' },
-        itemStyle: { color: '#ffd700' },
-        symbol: 'circle',
-        symbolSize: 5,
-        smooth: true,
+        itemStyle: { color: '#ffd700' }, symbol: 'circle', symbolSize: 5, smooth: true,
         areaStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
             { offset: 0, color: 'rgba(255,215,0,0.15)' },
@@ -353,7 +391,6 @@ function buildPowerProfitOption(): echarts.EChartsOption {
   }
 }
 
-// === 初始化图表 ===
 function initMarketChart() {
   if (!marketChartRef.value) return
   marketChart.value = echarts.init(marketChartRef.value)
@@ -366,7 +403,6 @@ function initPowerProfitChart() {
   powerProfitChart.value.setOption(buildPowerProfitOption())
 }
 
-// === locale 变化时重绘图表（用 nextTick 避免卡顿） ===
 watch(() => i18n.locale, () => {
   nextTick(() => {
     marketChart.value?.setOption(buildMarketOption(), true)
@@ -374,13 +410,17 @@ watch(() => i18n.locale, () => {
   })
 })
 
-// === resize handler ===
+watch(activeTab, (newTab) => {
+  if (newTab === 'market') {
+    nextTick(() => { initMarketChart() })
+  }
+})
+
 function handleResize() {
   marketChart.value?.resize()
   powerProfitChart.value?.resize()
 }
 
-// === 生命周期 ===
 onMounted(() => {
   chartData.value = getOperatorChartData()
   initMarketChart()
@@ -398,38 +438,157 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* === 页面容器 === */
-.operator-page {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
+.operator-dispatch {
+  display: grid;
+  grid-template-columns: 35% 1fr;
+  grid-template-rows: auto auto;
+  gap: 16px;
+  padding: 16px;
   animation: pageFadeIn 0.3s ease-out;
 }
+.left-panel { grid-column: 1; grid-row: 1; }
+.right-panel { grid-column: 2; grid-row: 1; }
+.bottom-panel { grid-column: 1 / -1; grid-row: 2; }
 
-/* === 图表区域 === */
-.chart-section {
+.market-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.market-tabs {
+  display: flex;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border-default);
+}
+.market-tab {
+  padding: 10px 24px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.market-tab:hover { color: var(--text-primary); }
+.market-tab.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+.metric-cards {
+  display: flex;
+  align-items: stretch;
+  margin-bottom: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-md);
+  padding: 16px 0;
+}
+.metric-card { flex: 1; text-align: center; padding: 0 16px; }
+.metric-divider { width: 1px; background: rgba(255, 255, 255, 0.1); align-self: stretch; }
+.metric-label { font-size: 12px; color: var(--text-secondary); font-weight: 500; margin-bottom: 2px; }
+.metric-sublabel { font-size: 10px; color: var(--text-tertiary); margin-bottom: 8px; }
+.metric-value { font-size: 22px; font-weight: 700; font-family: var(--font-mono); }
+.price-value-text { color: var(--color-primary); }
+.demand-value-text { color: #ffd700; }
+
+.coming-soon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 400px;
+  color: var(--text-tertiary);
+  font-size: 18px;
+  font-weight: 500;
+}
+.coming-soon-icon { font-size: 48px; }
+
+.chart-container { width: 100%; height: 400px; }
+
+.power-profit-card {
   background: var(--bg-card);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
   padding: 20px;
 }
-
-.chart-title {
-  font-size: 15px;
-  font-weight: 600;
+.pp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.pp-title { font-size: 15px; font-weight: 600; color: var(--text-primary); margin: 0; }
+.pp-controls { display: flex; align-items: center; gap: 8px; }
+.pp-select {
+  padding: 6px 28px 6px 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
   color: var(--text-primary);
-  margin: 0 0 16px 0;
+  font-size: 13px;
+  font-family: var(--font-sans);
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.5)' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  transition: border-color var(--transition-fast);
 }
-
-.chart-container {
-  width: 100%;
-  height: 400px;
+.pp-select:focus { border-color: var(--border-focus); }
+.pp-select option { background: #1a1a1a; color: #fff; }
+.pp-date-input {
+  padding: 6px 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: var(--font-sans);
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+  color-scheme: dark;
 }
+.pp-date-input:focus { border-color: var(--border-focus); }
 
-/* === 响应式 === */
+.pp-metric-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.pp-metric-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+}
+.pp-metric-title { font-size: 12px; color: var(--text-secondary); font-weight: 500; margin-bottom: 8px; }
+.pp-metric-main { font-size: 20px; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono); margin-bottom: 4px; }
+.profit-value { color: var(--color-primary); }
+.pp-metric-sub { font-size: 12px; color: var(--text-secondary); }
+.pp-trend { font-weight: 600; margin-left: 4px; }
+.trend-up { color: var(--color-primary); }
+.trend-down { color: var(--color-danger); }
+
+@media (max-width: 1024px) {
+  .operator-dispatch { grid-template-columns: 1fr; }
+  .left-panel, .right-panel, .bottom-panel { grid-column: 1; }
+}
 @media (max-width: 768px) {
-  .chart-container {
-    height: 300px;
-  }
+  .chart-container { height: 300px; }
+  .metric-cards { flex-direction: column; gap: 12px; }
+  .metric-divider { width: 100%; height: 1px; }
+  .pp-metric-cards { grid-template-columns: 1fr; }
 }
 </style>

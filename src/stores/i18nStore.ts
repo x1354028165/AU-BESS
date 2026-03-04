@@ -89,6 +89,33 @@ const messages: Record<string, Record<Locale, string>> = {
   runMode: { en: 'Run Mode', zh: '运行模式' },
   stop: { en: 'STOP', zh: '停止' },
 
+  // Settings section
+  edit: { en: 'Edit', zh: '编辑' },
+  save: { en: 'Save', zh: '保存' },
+  chargeStopSOC: { en: 'Charge Stop SOC', zh: '充电截止SOC' },
+  dischargeStopSOC: { en: 'Discharge Stop SOC', zh: '放电截止SOC' },
+  autoCharge: { en: 'Auto Charge', zh: '自动充电' },
+  autoDischarge: { en: 'Auto Discharge', zh: '自动放电' },
+
+  // Market tabs
+  market: { en: 'Market', zh: '行情' },
+  autoPreview: { en: 'Auto Preview', zh: '自动预览' },
+  comingSoon: { en: 'Coming Soon', zh: '即将上线' },
+
+  // Market metric cards
+  currentSpotPrice: { en: 'Current Spot Price', zh: '当前现货价格' },
+  currentDemand: { en: 'Current Demand', zh: '当前需求' },
+  forecastPrice: { en: 'Forecast Price', zh: '预测价格' },
+  forecastDemand: { en: 'Forecast Demand', zh: '预测需求' },
+  next30min: { en: 'NEXT 30MIN', zh: '未来30分钟' },
+
+  // Power & Profit section
+  powerAndProfit: { en: 'Power & Profit', zh: '电量与收益' },
+  day: { en: 'Day', zh: '日' },
+  month: { en: 'Month', zh: '月' },
+  year: { en: 'Year', zh: '年' },
+  cumulative: { en: 'Cumulative', zh: '累计' },
+
   // Header UI
   settings: { en: 'Settings', zh: '设置' },
   logout: { en: 'Logout', zh: '退出' },

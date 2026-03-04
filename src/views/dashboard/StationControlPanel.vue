@@ -92,6 +92,70 @@
         <span class="strategy-value">{{ i18n.tRunMode(currentStation.runMode) }}</span>
       </div>
     </div>
+
+    <!-- === Settings区 === -->
+    <div class="settings-section">
+      <div class="settings-header">
+        <h4 class="settings-title">{{ i18n.t('settings') }}</h4>
+        <button class="settings-edit-btn" @click="toggleEditMode">
+          {{ isEditMode ? i18n.t('save') : i18n.t('edit') }}
+        </button>
+      </div>
+
+      <div class="settings-row">
+        <span class="settings-label">{{ i18n.t('chargeStopSOC') }}</span>
+        <div class="settings-value-wrap">
+          <input
+            v-if="isEditMode"
+            v-model.number="chargeStopSOC"
+            type="number"
+            min="0"
+            max="100"
+            class="settings-input"
+          />
+          <span v-else class="settings-value">{{ chargeStopSOC }}%</span>
+        </div>
+      </div>
+
+      <div class="settings-row">
+        <span class="settings-label">{{ i18n.t('dischargeStopSOC') }}</span>
+        <div class="settings-value-wrap">
+          <input
+            v-if="isEditMode"
+            v-model.number="dischargeStopSOC"
+            type="number"
+            min="0"
+            max="100"
+            class="settings-input"
+          />
+          <span v-else class="settings-value">{{ dischargeStopSOC }}%</span>
+        </div>
+      </div>
+
+      <div class="settings-row">
+        <span class="settings-label">{{ i18n.t('autoCharge') }}</span>
+        <div class="settings-value-wrap">
+          <template v-if="isEditMode">
+            <input v-model="autoChargeStart" type="time" class="settings-input time-input" />
+            <span class="time-separator">-</span>
+            <input v-model="autoChargeEnd" type="time" class="settings-input time-input" />
+          </template>
+          <span v-else class="settings-time-bar charge-time-bar">{{ autoChargeStart }} - {{ autoChargeEnd }}</span>
+        </div>
+      </div>
+
+      <div class="settings-row">
+        <span class="settings-label">{{ i18n.t('autoDischarge') }}</span>
+        <div class="settings-value-wrap">
+          <template v-if="isEditMode">
+            <input v-model="autoDischargeStart" type="time" class="settings-input time-input" />
+            <span class="time-separator">-</span>
+            <input v-model="autoDischargeEnd" type="time" class="settings-input time-input" />
+          </template>
+          <span v-else class="settings-time-bar discharge-time-bar">{{ autoDischargeStart }} - {{ autoDischargeEnd }}</span>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -212,6 +276,19 @@ function handleDischarge() {
   } else {
     state.runStatus = 'discharging'
   }
+}
+
+// === Settings区 ===
+const isEditMode = ref(false)
+const chargeStopSOC = ref(75)
+const dischargeStopSOC = ref(30)
+const autoChargeStart = ref('09:00')
+const autoChargeEnd = ref('13:00')
+const autoDischargeStart = ref('17:00')
+const autoDischargeEnd = ref('21:00')
+
+function toggleEditMode() {
+  isEditMode.value = !isEditMode.value
 }
 </script>
 
@@ -607,5 +684,116 @@ function handleDischarge() {
   .battery-body {
     max-width: 150px;
   }
+}
+
+/* === Settings区 === */
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-default);
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settings-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.settings-edit-btn {
+  padding: 4px 14px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-default);
+  background: transparent;
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.settings-edit-btn:hover {
+  background: var(--color-primary-dim);
+  border-color: var(--color-primary);
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.settings-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.settings-value-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.settings-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+
+.settings-input {
+  width: 64px;
+  padding: 4px 8px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-focus);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: var(--font-mono);
+  outline: none;
+  text-align: center;
+}
+
+.settings-input.time-input {
+  width: 88px;
+}
+
+.time-separator {
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin: 0 2px;
+}
+
+.settings-time-bar {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+}
+
+.charge-time-bar {
+  background: rgba(0, 255, 136, 0.12);
+  color: var(--color-primary);
+  border: 1px solid rgba(0, 255, 136, 0.25);
+}
+
+.discharge-time-bar {
+  background: rgba(255, 215, 0, 0.12);
+  color: #ffd700;
+  border: 1px solid rgba(255, 215, 0, 0.25);
 }
 </style>
