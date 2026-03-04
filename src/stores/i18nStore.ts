@@ -117,6 +117,10 @@ const messages: Record<string, Record<Locale, string>> = {
   cumulative: { en: 'Cumulative', zh: '累计' },
 
   // Header UI
+  confirmStop: { en: 'Confirm Stop', zh: '确认停止' },
+  confirmStopDesc: { en: 'Are you sure you want to stop the current operation?', zh: '确定要停止当前操作吗？' },
+  confirmStopBtn: { en: 'Stop Now', zh: '立即停止' },
+  cancel: { en: 'Cancel', zh: '取消' },
   settings: { en: 'Settings', zh: '设置' },
   logout: { en: 'Logout', zh: '退出' },
   confirmLogout: { en: 'Confirm Logout', zh: '确认退出' },

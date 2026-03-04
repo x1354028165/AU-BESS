@@ -16,3 +16,7 @@ app.use(pinia)
 app.use(router)
 
 app.mount('#app')
+
+// Remove loading spinner after Vue mounts
+const loader = document.getElementById('app-loader')
+if (loader) loader.remove()

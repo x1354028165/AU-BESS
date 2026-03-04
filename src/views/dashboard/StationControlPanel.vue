@@ -1,30 +1,31 @@
 <template>
-  <div class="control-panel">
-    <!-- Header: 标题 + Auto开关 -->
-    <div class="panel-header">
-      <h3 class="panel-title">{{ i18n.t('stationManagement') }}</h3>
-      <div class="auto-toggle">
-        <span class="auto-label">{{ i18n.t('auto') }}</span>
-        <div
-          class="toggle-switch"
-          :class="{ active: isAutoMode }"
-          @click="toggleAutoMode"
-          role="switch"
-          :aria-checked="isAutoMode"
-        >
-          <div class="toggle-knob"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 电站选择器 -->
-    <select v-model="selectedStationId" class="station-select">
+  <div class="station-control-wrapper">
+    <!-- 电站选择器（卡片外部，页面级数据切换） -->
+    <select v-model="selectedStationId" class="station-select-top">
       <option v-for="s in stations" :key="s.id" :value="s.id">
         {{ s.name }} ({{ s.region }})
       </option>
     </select>
 
-    <!-- 中间区域：Charge按钮 | 电价圈 | Discharge按钮 -->
+    <div class="control-panel">
+      <!-- Header: 标题 + Auto开关 -->
+      <div class="panel-header">
+        <h3 class="panel-title">{{ i18n.t('stationManagement') }}</h3>
+        <div class="auto-toggle">
+          <span class="auto-label">{{ i18n.t('auto') }}</span>
+          <div
+            class="toggle-switch"
+            :class="{ active: isAutoMode }"
+            @click="toggleAutoMode"
+            role="switch"
+            :aria-checked="isAutoMode"
+          >
+            <div class="toggle-knob"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 中间区域：Charge按钮 | 电价圈 | Discharge按钮 -->
     <div class="control-center">
       <button
         class="action-btn charge-btn"
@@ -34,12 +35,25 @@
         {{ i18n.t('charge') }}
       </button>
 
-      <!-- 电价圈（静态科技渐变圆，不做水波纹） -->
-      <div class="price-circle" :class="priceCircleClass">
-        <div class="price-value">
-          ${{ currentStation.currentSpotPrice?.toFixed(2) ?? '--' }}
+      <!-- 电价圈（静态科技渐变圆） -->
+      <div
+        class="price-circle-wrap"
+        @mouseenter="showStopOverlay = canStop"
+        @mouseleave="showStopOverlay = false"
+        @click="handleCircleClick"
+      >
+        <div class="price-circle" :class="priceCircleClass">
+          <div class="price-value">
+            ${{ currentStation.currentSpotPrice?.toFixed(2) ?? '--' }}
+          </div>
+          <div class="price-label">{{ i18n.t('spotPriceLabel') }}</div>
         </div>
-        <div class="price-label">{{ i18n.t('spotPriceLabel') }}</div>
+        <!-- STOP遮罩：充电/放电时hover显示 -->
+        <Transition name="fade">
+          <div v-if="showStopOverlay" class="stop-overlay">
+            <span class="stop-text">STOP</span>
+          </div>
+        </Transition>
       </div>
 
       <button
@@ -156,7 +170,25 @@
         </div>
       </div>
     </div>
-  </div>
+    </div><!-- .control-panel -->
+  </div><!-- .station-control-wrapper -->
+
+  <!-- STOP确认弹窗 -->
+  <Teleport to="body">
+    <Transition name="fade">
+      <div v-if="showStopConfirm" class="stop-confirm-overlay" @click.self="showStopConfirm = false">
+        <div class="stop-confirm-modal">
+          <div class="stop-confirm-icon">⚠️</div>
+          <h3>{{ i18n.t('confirmStop') }}</h3>
+          <p>{{ i18n.t('confirmStopDesc') }}</p>
+          <div class="stop-confirm-actions">
+            <button class="btn-cancel" @click="showStopConfirm = false">{{ i18n.t('cancel') }}</button>
+            <button class="btn-confirm-stop" @click="confirmStop">{{ i18n.t('confirmStopBtn') }}</button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -185,7 +217,9 @@ const stations = allStations.map(s => ({
 
 // === 响应式状态 ===
 const selectedStationId = ref(stations[0].id)
-const isAutoMode = ref(true) // 默认Auto
+const isAutoMode = ref(true)
+const showStopOverlay = ref(false)
+const showStopConfirm = ref(false) // 默认Auto
 const currentStrategy = ref('ai-bidding')
 
 // 每个电站的可变运行状态（独立于base数据）
@@ -230,6 +264,12 @@ const priceCircleClass = computed(() => {
 })
 
 // SOC颜色
+// 是否可以停止（充电或放电中才能停）
+const canStop = computed(() => {
+  const status = currentStation.value.runStatus
+  return !isAutoMode.value && (status === 'charging' || status === 'discharging')
+})
+
 const socColorClass = computed(() => {
   const soc = currentStation.value.soc
   if (soc >= 60) return 'soc-high'
@@ -286,6 +326,20 @@ const autoChargeStart = ref('09:00')
 const autoChargeEnd = ref('13:00')
 const autoDischargeStart = ref('17:00')
 const autoDischargeEnd = ref('21:00')
+
+function handleCircleClick() {
+  if (!canStop.value) return
+  showStopConfirm.value = true
+  showStopOverlay.value = false
+}
+
+function confirmStop() {
+  const state = stationStates[selectedStationId.value]
+  if (state) {
+    state.runStatus = 'idle'
+  }
+  showStopConfirm.value = false
+}
 
 function toggleEditMode() {
   isEditMode.value = !isEditMode.value
@@ -363,7 +417,7 @@ function toggleEditMode() {
 }
 
 /* === 电站选择器 === */
-.station-select {
+.station-select-old-unused {
   width: 100%;
   padding: 10px 12px;
   background: var(--bg-input);
@@ -796,4 +850,153 @@ function toggleEditMode() {
   color: #ffd700;
   border: 1px solid rgba(255, 215, 0, 0.25);
 }
+/* === 选择器置顶 === */
+.station-control-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.station-select-top {
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2300ff88' d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+.station-select-top:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.station-select-top option {
+  background: #1a1f2e;
+  color: #fff;
+}
+
+/* === STOP遮罩 === */
+.price-circle-wrap {
+  position: relative;
+  cursor: default;
+}
+
+.stop-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(220, 38, 38, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.stop-text {
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 4px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* === STOP确认弹窗 === */
+.stop-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.stop-confirm-modal {
+  background: #1a1f2e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 32px;
+  text-align: center;
+  max-width: 360px;
+  width: 90%;
+}
+
+.stop-confirm-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.stop-confirm-modal h3 {
+  color: #ff4757;
+  font-size: 18px;
+  margin: 0 0 8px 0;
+}
+
+.stop-confirm-modal p {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+  margin: 0 0 24px 0;
+}
+
+.stop-confirm-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.btn-cancel {
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-confirm-stop {
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: none;
+  background: #ff4757;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.btn-confirm-stop:hover {
+  background: #ee3344;
+}
+
+/* === Settings分割线 === */
+.settings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.settings-row:last-child {
+  border-bottom: none;
+}
+
 </style>
