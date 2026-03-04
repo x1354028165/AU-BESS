@@ -76,6 +76,12 @@
       </button>
     </div>
 
+    <!-- Cost成本 (v2风格) -->
+    <div class="cost-section">
+      <span class="cost-label">Cost($/MWh)</span>
+      <span class="cost-value">${{ currentStation.currentSpotPrice ? (currentStation.currentSpotPrice * 0.85).toFixed(2) : '--' }}</span>
+    </div>
+
     <!-- 电池SOC进度条 -->
     <div class="battery-row">
       <span class="battery-label">SOC</span>
@@ -107,41 +113,38 @@
         </button>
       </div>
 
-      <div class="settings-grid">
-        <div class="settings-card">
-          <div class="settings-card-label">{{ i18n.t('chargeStopSOC') }}</div>
-          <div class="settings-card-value">
-            <input v-if="isEditMode" v-model.number="chargeStopSOC" type="number" min="0" max="100" class="settings-input" />
-            <span v-else>{{ chargeStopSOC }}%</span>
-          </div>
-        </div>
-        <div class="settings-card">
-          <div class="settings-card-label">{{ i18n.t('dischargeStopSOC') }}</div>
-          <div class="settings-card-value">
-            <input v-if="isEditMode" v-model.number="dischargeStopSOC" type="number" min="0" max="100" class="settings-input" />
-            <span v-else>{{ dischargeStopSOC }}%</span>
-          </div>
-        </div>
-        <div class="settings-card">
-          <div class="settings-card-label">{{ i18n.t('autoCharge') }}</div>
-          <div class="settings-card-value">
+      <!-- SOC阈值行（v2: 同一行并排） -->
+      <div class="soc-threshold-row">
+        <span class="threshold-item">⚡ Charge Stop SOC <strong>{{ isEditMode ? '' : chargeStopSOC + '%' }}</strong>
+          <input v-if="isEditMode" v-model.number="chargeStopSOC" type="number" min="0" max="100" class="settings-input inline-input" />
+        </span>
+        <span class="threshold-item">🔋 Discharge Stop SOC <strong>{{ isEditMode ? '' : dischargeStopSOC + '%' }}</strong>
+          <input v-if="isEditMode" v-model.number="dischargeStopSOC" type="number" min="0" max="100" class="settings-input inline-input" />
+        </span>
+      </div>
+
+      <!-- Auto时段卡片（v2: 两列并排） -->
+      <div class="auto-schedule-grid">
+        <div class="schedule-card charge-schedule">
+          <div class="schedule-card-title">Auto Charge</div>
+          <div class="schedule-card-time">
             <template v-if="isEditMode">
               <input v-model="autoChargeStart" type="time" class="settings-input time-input" />
               <span class="time-separator">-</span>
               <input v-model="autoChargeEnd" type="time" class="settings-input time-input" />
             </template>
-            <span v-else class="settings-time-bar charge-time-bar">{{ autoChargeStart }} - {{ autoChargeEnd }}</span>
+            <span v-else>{{ autoChargeStart }}-{{ autoChargeEnd }}</span>
           </div>
         </div>
-        <div class="settings-card">
-          <div class="settings-card-label">{{ i18n.t('autoDischarge') }}</div>
-          <div class="settings-card-value">
+        <div class="schedule-card discharge-schedule">
+          <div class="schedule-card-title">Auto Discharge</div>
+          <div class="schedule-card-time">
             <template v-if="isEditMode">
               <input v-model="autoDischargeStart" type="time" class="settings-input time-input" />
               <span class="time-separator">-</span>
               <input v-model="autoDischargeEnd" type="time" class="settings-input time-input" />
             </template>
-            <span v-else class="settings-time-bar discharge-time-bar">{{ autoDischargeStart }} - {{ autoDischargeEnd }}</span>
+            <span v-else>{{ autoDischargeStart }}-{{ autoDischargeEnd }}</span>
           </div>
         </div>
       </div>
@@ -1177,44 +1180,89 @@ function toggleEditMode() {
   background: #e6ac00;
 }
 
-/* === Settings 2x2 Grid === */
-.settings-grid {
+/* === Cost 成本显示 (v2风格) === */
+.cost-section {
+  text-align: center;
+  padding: 4px 0 8px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.cost-value {
+  color: #fff;
+  font-weight: 600;
+  margin-left: 6px;
+}
+
+/* === Settings v2布局 === */
+.soc-threshold-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.threshold-item {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.threshold-item strong {
+  color: #fff;
+  font-size: 14px;
+  margin-left: 4px;
+}
+
+.inline-input {
+  width: 50px !important;
+  display: inline-block;
+  margin-left: 4px;
+}
+
+.auto-schedule-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
 
-.settings-card {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+.schedule-card {
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 10px;
-  padding: 12px 14px;
+  padding: 10px 14px;
 }
 
-.settings-card-label {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.45);
-  margin-bottom: 6px;
+.charge-schedule {
+  border-color: rgba(0, 255, 136, 0.25);
 }
 
-.settings-card-value {
-  font-size: 16px;
+.discharge-schedule {
+  border-color: rgba(255, 193, 7, 0.25);
+}
+
+.schedule-card-title {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.schedule-card-time {
+  font-size: 14px;
   font-weight: 700;
-  color: #fff;
+  color: var(--color-primary);
 }
 
-.settings-card-value .settings-input {
-  width: 60px;
+.discharge-schedule .schedule-card-time {
+  color: #ffc107;
+}
+
+.schedule-card-time .settings-input {
+  width: 80px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 6px;
   color: #fff;
-  padding: 4px 8px;
-  font-size: 14px;
-}
-
-.settings-card-value .time-input {
-  width: 80px;
+  padding: 4px 6px;
+  font-size: 13px;
 }
 
 </style>
