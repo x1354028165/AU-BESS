@@ -1668,4 +1668,180 @@ function saveSettings() {
   border-color: rgba(255, 193, 7, 0.3);
 }
 
+
+/* === 所有Teleport弹窗CSS (非scoped) === */
+.stop-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.stop-confirm-modal {
+  background: #1a1f2e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 28px 32px;
+  text-align: center;
+  max-width: 360px;
+  width: 90%;
+}
+
+.stop-confirm-icon { font-size: 40px; margin-bottom: 12px; }
+.stop-confirm-modal h3 { color: #ff3b30; font-size: 18px; margin: 0 0 8px; }
+.stop-confirm-modal p { color: rgba(255,255,255,0.5); font-size: 13px; margin: 0 0 20px; }
+
+.stop-confirm-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.btn-cancel {
+  padding: 10px 24px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.btn-cancel:hover { background: rgba(255, 255, 255, 0.12); }
+
+.btn-confirm-stop {
+  padding: 10px 24px;
+  background: #ff3b30;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-confirm-stop:hover { background: #ee3344; }
+
+/* 操作确认弹窗 */
+.op-confirm-modal {
+  background: #1a1f2e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 28px 32px;
+  max-width: 440px;
+  width: 90%;
+}
+
+.op-confirm-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.op-confirm-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.op-confirm-icon-wrap.charge {
+  background: linear-gradient(145deg, rgba(0, 255, 136, 0.15), rgba(0, 255, 136, 0.05));
+  box-shadow: 0 4px 12px rgba(0, 255, 136, 0.15);
+}
+
+.op-confirm-icon-wrap.discharge {
+  background: linear-gradient(145deg, rgba(255, 215, 0, 0.15), rgba(255, 215, 0, 0.05));
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.15);
+}
+
+.op-confirm-title {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.op-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.op-info-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.op-card-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 6px;
+}
+
+.op-card-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.op-card-value.charge { color: var(--color-primary); }
+.op-card-value.discharge { color: #ffc107; }
+
+.op-confirm-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.btn-confirm-op {
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.btn-confirm-op.charge,
+.btn-confirm-op.btn-charge {
+  background: var(--color-primary);
+}
+
+.btn-confirm-op.charge:hover,
+.btn-confirm-op.btn-charge:hover {
+  background: #00cc6a;
+}
+
+.btn-confirm-op.discharge,
+.btn-confirm-op.btn-discharge {
+  background: #ffc107;
+  color: #1a1f2e;
+}
+
+.btn-confirm-op.discharge:hover,
+.btn-confirm-op.btn-discharge:hover {
+  background: #e6ac00;
+}
+
+/* fade transition */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+
 </style>
