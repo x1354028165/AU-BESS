@@ -113,39 +113,22 @@
         </button>
       </div>
 
-      <!-- SOC阈值行（v2: 同一行并排） -->
+      <!-- SOC阈值 -->
       <div class="soc-threshold-row">
-        <span class="threshold-item">⚡ Charge Stop SOC <strong>{{ isEditMode ? '' : chargeStopSOC + '%' }}</strong>
-          <input v-if="isEditMode" v-model.number="chargeStopSOC" type="number" min="0" max="100" class="settings-input inline-input" />
-        </span>
-        <span class="threshold-item">🔋 Discharge Stop SOC <strong>{{ isEditMode ? '' : dischargeStopSOC + '%' }}</strong>
-          <input v-if="isEditMode" v-model.number="dischargeStopSOC" type="number" min="0" max="100" class="settings-input inline-input" />
-        </span>
+        <span class="threshold-item charge">⚡ {{ chargeStopSOC }}%</span>
+        <span class="threshold-divider">|</span>
+        <span class="threshold-item discharge">🔋 {{ dischargeStopSOC }}%</span>
       </div>
 
-      <!-- Auto时段卡片（v2: 两列并排） -->
+      <!-- Auto时段 -->
       <div class="auto-schedule-grid">
         <div class="schedule-card charge-schedule">
-          <div class="schedule-card-title">Auto Charge</div>
-          <div class="schedule-card-time">
-            <template v-if="isEditMode">
-              <input v-model="autoChargeStart" type="time" class="settings-input time-input" />
-              <span class="time-separator">-</span>
-              <input v-model="autoChargeEnd" type="time" class="settings-input time-input" />
-            </template>
-            <span v-else>{{ autoChargeStart }}-{{ autoChargeEnd }}</span>
-          </div>
+          <span class="schedule-icon">⚡</span>
+          <span class="schedule-time">{{ autoChargeStart }}-{{ autoChargeEnd }}</span>
         </div>
         <div class="schedule-card discharge-schedule">
-          <div class="schedule-card-title">Auto Discharge</div>
-          <div class="schedule-card-time">
-            <template v-if="isEditMode">
-              <input v-model="autoDischargeStart" type="time" class="settings-input time-input" />
-              <span class="time-separator">-</span>
-              <input v-model="autoDischargeEnd" type="time" class="settings-input time-input" />
-            </template>
-            <span v-else>{{ autoDischargeStart }}-{{ autoDischargeEnd }}</span>
-          </div>
+          <span class="schedule-icon">🔋</span>
+          <span class="schedule-time">{{ autoDischargeStart }}-{{ autoDischargeEnd }}</span>
         </div>
       </div>
     </div>
@@ -823,6 +806,8 @@ function saveSettings() {
   background: rgba(255, 255, 255, 0.05);
 }
 
+.battery-row { max-width: 200px; }
+
 .battery-fill {
   height: 100%;
   border-radius: 4px;
@@ -1352,7 +1337,7 @@ function saveSettings() {
 }
 
 .cost-value {
-  color: #fff;
+  color: var(--color-primary);
   font-weight: 600;
   margin-left: 6px;
 }
@@ -1360,25 +1345,28 @@ function saveSettings() {
 /* === Settings v2布局 === */
 .soc-threshold-row {
   display: flex;
-  gap: 16px;
-  margin-bottom: 12px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 10px;
 }
 
 .threshold-item {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  font-weight: 700;
 }
 
-.threshold-item strong {
-  color: #fff;
+.threshold-item.charge {
+  color: var(--color-primary);
+}
+
+.threshold-item.discharge {
+  color: #ffc107;
+}
+
+.threshold-divider {
+  color: rgba(255, 255, 255, 0.15);
   font-size: 14px;
-  margin-left: 4px;
-}
-
-.inline-input {
-  width: 50px !important;
-  display: inline-block;
-  margin-left: 4px;
 }
 
 .auto-schedule-grid {
@@ -1401,31 +1389,28 @@ function saveSettings() {
   border-color: rgba(255, 193, 7, 0.25);
 }
 
-.schedule-card-title {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
-  font-weight: 600;
-  margin-bottom: 4px;
+.schedule-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
 }
 
-.schedule-card-time {
+.schedule-icon {
   font-size: 14px;
+}
+
+.schedule-time {
+  font-size: 13px;
   font-weight: 700;
+}
+
+.charge-schedule .schedule-time {
   color: var(--color-primary);
 }
 
-.discharge-schedule .schedule-card-time {
+.discharge-schedule .schedule-time {
   color: #ffc107;
-}
-
-.schedule-card-time .settings-input {
-  width: 80px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 6px;
-  color: #fff;
-  padding: 4px 6px;
-  font-size: 13px;
 }
 </style>
 <style>
