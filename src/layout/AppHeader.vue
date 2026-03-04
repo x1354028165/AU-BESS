@@ -166,6 +166,7 @@ function handleLogout() {
   display: flex;
   align-items: center;
   gap: 4px;
+  overflow-x: auto;
 }
 
 .nav-link {

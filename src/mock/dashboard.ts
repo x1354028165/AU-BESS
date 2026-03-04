@@ -149,6 +149,164 @@ export const allStations: Station[] = [
   },
 ]
 
+// === Operator 图表数据类型 ===
+
+export interface MarketDataPoint {
+  time: string                    // '00:00', '01:00', etc.
+  historicalPrice: number | null  // $/MWh (当前时间之前)
+  predictedPrice: number | null   // $/MWh (当前时间之后)
+  demand: number | null           // MW (当前时间之前)
+  predictedDemand: number | null  // MW (当前时间之后)
+}
+
+export interface PowerProfitDataPoint {
+  time: string
+  chargeEnergy: number     // MWh (负值表示充电)
+  dischargeEnergy: number  // MWh (正值表示放电)
+  chargeCost: number       // AUD (负值)
+  dischargeRevenue: number // AUD (正值)
+  netProfit: number        // AUD
+}
+
+export interface OperatorChartData {
+  market: MarketDataPoint[]
+  powerProfit: PowerProfitDataPoint[]
+}
+
+// 24小时电价模式 (基于AEMO真实数据简化为每小时)
+const hourlyPricePattern: number[] = [
+  66,   // 00:00
+  63,   // 01:00
+  65,   // 02:00
+  65,   // 03:00
+  76,   // 04:00
+  130,  // 05:00 - 早高峰开始
+  159,  // 06:00
+  -6,   // 07:00 - 太阳能过剩开始
+  -11,  // 08:00
+  -15,  // 09:00
+  -18,  // 10:00
+  -21,  // 11:00
+  -25,  // 12:00
+  -34,  // 13:00
+  -27,  // 14:00
+  -12,  // 15:00
+  55,   // 16:00 - 傍晚高峰开始
+  132,  // 17:00
+  160,  // 18:00
+  178,  // 19:00
+  243,  // 20:00 - 晚高峰
+  126,  // 21:00
+  109,  // 22:00
+  159,  // 23:00
+]
+
+// 24小时需求模式 (基于AEMO真实数据简化为每小时)
+const hourlyDemandPattern: number[] = [
+  6900,  // 00:00
+  6480,  // 01:00
+  6440,  // 02:00
+  6210,  // 03:00
+  6300,  // 04:00
+  6580,  // 05:00
+  6800,  // 06:00
+  6580,  // 07:00
+  5440,  // 08:00
+  4870,  // 09:00
+  4510,  // 10:00
+  4220,  // 11:00
+  4060,  // 12:00
+  4050,  // 13:00
+  4190,  // 14:00
+  5200,  // 15:00
+  6340,  // 16:00
+  7530,  // 17:00
+  8030,  // 18:00
+  8200,  // 19:00
+  8070,  // 20:00
+  7660,  // 21:00
+  7360,  // 22:00
+  7160,  // 23:00
+]
+
+/**
+ * 获取 Operator ECharts 大屏数据
+ * 24小时时序数据，当前小时分割 historical / predicted
+ */
+export function getOperatorChartData(): OperatorChartData {
+  const now = new Date()
+  // 用澳洲东部时间 (UTC+10) 模拟
+  const currentHour = (now.getUTCHours() + 10) % 24
+
+  const market: MarketDataPoint[] = []
+  const powerProfit: PowerProfitDataPoint[] = []
+
+  for (let h = 0; h < 24; h++) {
+    const time = `${h.toString().padStart(2, '0')}:00`
+    const price = hourlyPricePattern[h]
+    const demand = hourlyDemandPattern[h]
+
+    // Market: 分割 historical / predicted
+    if (h < currentHour) {
+      market.push({
+        time,
+        historicalPrice: price,
+        predictedPrice: null,
+        demand,
+        predictedDemand: null,
+      })
+    } else if (h === currentHour) {
+      market.push({
+        time,
+        historicalPrice: price,
+        predictedPrice: price,
+        demand,
+        predictedDemand: demand,
+      })
+    } else {
+      market.push({
+        time,
+        historicalPrice: null,
+        predictedPrice: price,
+        demand: null,
+        predictedDemand: demand,
+      })
+    }
+
+    // Power & Profit: 充放电时段
+    let chgMWh = 0
+    let dchMWh = 0
+
+    // 充电时段: 01:00-05:00 (低价), 10:00-14:00 (太阳能过剩负电价)
+    if (h >= 1 && h < 5) {
+      chgMWh = 0.8 + (h * 0.1)
+    } else if (h >= 10 && h < 14) {
+      chgMWh = 0.5 + ((h - 10) * 0.15)
+    }
+
+    // 放电时段: 07:00-09:00 (早高峰), 16:00-21:00 (傍晚高峰)
+    if (h >= 7 && h < 9) {
+      dchMWh = 0.4 + ((h - 7) * 0.15)
+    } else if (h >= 16 && h < 21) {
+      dchMWh = 0.5 + ((h - 16) * 0.08)
+    }
+
+    const actualCost = chgMWh > 0 ? chgMWh * price : 0
+    const actualRev = dchMWh > 0 ? dchMWh * price : 0
+
+    powerProfit.push({
+      time,
+      chargeEnergy: parseFloat((-chgMWh).toFixed(3)),
+      dischargeEnergy: parseFloat(dchMWh.toFixed(3)),
+      chargeCost: parseFloat((-Math.abs(actualCost)).toFixed(2)),
+      dischargeRevenue: parseFloat(actualRev.toFixed(2)),
+      netProfit: parseFloat((actualRev - Math.abs(actualCost)).toFixed(2)),
+    })
+  }
+
+  return { market, powerProfit }
+}
+
 // === 根据电站列表计算概览 ===
 
 export function computeSummary(stations: Station[]): DashboardSummary {
