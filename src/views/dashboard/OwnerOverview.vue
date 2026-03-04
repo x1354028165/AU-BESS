@@ -13,7 +13,7 @@
           </svg>
         </div>
         <div class="metric-body">
-          <span class="metric-label">总容量</span>
+          <span class="metric-label">{{ i18n.t('totalCapacity') }}</span>
           <span class="metric-value">{{ summary.totalCapacity }}<small>MW</small></span>
         </div>
       </div>
@@ -25,7 +25,7 @@
           </svg>
         </div>
         <div class="metric-body">
-          <span class="metric-label">实时总功率</span>
+          <span class="metric-label">{{ i18n.t('realTimePower') }}</span>
           <span class="metric-value" :class="summary.totalPower >= 0 ? 'val-positive' : 'val-negative'">
             {{ summary.totalPower > 0 ? '+' : '' }}{{ summary.totalPower }}<small>MW</small>
           </span>
@@ -40,7 +40,7 @@
           </svg>
         </div>
         <div class="metric-body">
-          <span class="metric-label">今日收益</span>
+          <span class="metric-label">{{ i18n.t('todayRevenue') }}</span>
           <span class="metric-value">${{ formatNumber(summary.todayRevenue) }}<small>AUD</small></span>
         </div>
       </div>
@@ -52,7 +52,7 @@
           </svg>
         </div>
         <div class="metric-body">
-          <span class="metric-label">平均现货电价</span>
+          <span class="metric-label">{{ i18n.t('avgSpotPrice') }}</span>
           <span class="metric-value">{{ summary.avgSpotPrice }}<small>$/MWh</small></span>
         </div>
       </div>
@@ -65,7 +65,7 @@
           </svg>
         </div>
         <div class="metric-body">
-          <span class="metric-label">活跃告警</span>
+          <span class="metric-label">{{ i18n.t('activeAlerts') }}</span>
           <span class="metric-value val-alert">{{ summary.alertCount }}</span>
         </div>
       </div>
@@ -74,8 +74,8 @@
     <!-- === 电站列表 === -->
     <section class="station-section">
       <h2 class="section-title">
-        电站概览
-        <span class="station-count">{{ summary.onlineCount }}/{{ summary.stationCount }} 在线</span>
+        {{ i18n.t('stationOverview') }}
+        <span class="station-count">{{ summary.onlineCount }}/{{ summary.stationCount }} {{ i18n.t('online') }}</span>
       </h2>
       <div class="station-grid">
         <div
@@ -87,7 +87,7 @@
           <div class="station-header">
             <span class="station-name">{{ station.name }}</span>
             <span class="comm-badge" :class="station.commStatus">
-              {{ station.commStatus === 'online' ? '在线' : '离线' }}
+              {{ station.commStatus === 'online' ? i18n.t('online') : i18n.t('offline') }}
             </span>
           </div>
 
@@ -102,7 +102,7 @@
           <div class="station-metrics">
             <div class="soc-bar-wrapper">
               <div class="soc-label">
-                <span>SOC</span>
+                <span>{{ i18n.t('soc') }}</span>
                 <span :class="socClass(station.soc)">{{ station.soc }}%</span>
               </div>
               <div class="soc-track">
@@ -115,19 +115,19 @@
             </div>
 
             <div class="kv-row">
-              <span class="kv-label">功率</span>
+              <span class="kv-label">{{ i18n.t('power') }}</span>
               <span class="kv-value" :class="powerClass(station.power)">
                 {{ station.power > 0 ? '+' : '' }}{{ station.power }} MW
               </span>
             </div>
 
             <div class="kv-row">
-              <span class="kv-label">容量</span>
+              <span class="kv-label">{{ i18n.t('capacity') }}</span>
               <span class="kv-value">{{ station.capacity }} MW</span>
             </div>
 
             <div class="kv-row">
-              <span class="kv-label">今日收益</span>
+              <span class="kv-label">{{ i18n.t('todayProfit') }}</span>
               <span class="kv-value" :class="station.todayProfit >= 0 ? 'val-positive' : 'val-negative'">
                 ${{ formatNumber(station.todayProfit) }}
               </span>
@@ -135,24 +135,26 @@
           </div>
 
           <div class="station-mode">
-            {{ station.runMode }}
+            {{ i18n.tRunMode(station.runMode) }}
           </div>
         </div>
       </div>
     </section>
 
     <!-- === 图表预留 === -->
-    <div class="charts-placeholder">图表区域 - Phase 3</div>
+    <div class="charts-placeholder">{{ i18n.t('chartsPlaceholder') }}</div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/authStore'
+import { useI18nStore } from '@/stores/i18nStore'
 import { getDashboardSummary, getStationList } from '@/api/dashboard'
 import type { Station, DashboardSummary } from '@/mock/dashboard'
 
 const authStore = useAuthStore()
+const i18n = useI18nStore()
 
 const summary = ref<DashboardSummary>({
   totalCapacity: 0,
@@ -190,11 +192,12 @@ function formatNumber(n: number): string {
 
 function runStatusLabel(status: string): string {
   const map: Record<string, string> = {
-    charging: '充电中',
-    discharging: '放电中',
-    idle: '待机',
+    charging: 'charging',
+    discharging: 'discharging',
+    idle: 'idle',
   }
-  return map[status] ?? status
+  const key = map[status]
+  return key ? i18n.t(key) : status
 }
 
 function socClass(soc: number): string {

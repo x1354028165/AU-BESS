@@ -20,9 +20,9 @@
 
     <!-- Right: Language + Role + User Avatar Dropdown -->
     <div class="header-actions">
-      <span class="lang-btn" @click="$emit('toggle-lang')">{{ lang === 'en' ? 'EN' : '中' }}</span>
+      <span class="lang-btn" @click="i18n.toggleLocale()">{{ i18n.locale === 'en' ? 'EN' : '中' }}</span>
       <span class="role-badge" @click="$emit('switch-role')">{{ roleLabel }} 🔄</span>
-      <!-- User Avatar with Hover Dropdown (v2 style) -->
+      <!-- User Avatar with Hover Dropdown -->
       <div class="user-dropdown" @mouseenter="showDropdown = true" @mouseleave="showDropdown = false">
         <div class="user-avatar">{{ avatarLetter }}</div>
         <Transition name="dropdown-fade">
@@ -31,11 +31,11 @@
             <div class="dropdown-divider"></div>
             <div class="dropdown-item" @click="handleSettings">
               <span class="dropdown-icon">⚙️</span>
-              <span>{{ lang === 'en' ? 'Settings' : '设置' }}</span>
+              <span>{{ i18n.t('settings') }}</span>
             </div>
             <div class="dropdown-item dropdown-item-danger" @click="showLogoutConfirm = true">
               <span class="dropdown-icon">🚪</span>
-              <span>{{ lang === 'en' ? 'Logout' : '退出' }}</span>
+              <span>{{ i18n.t('logout') }}</span>
             </div>
           </div>
         </Transition>
@@ -47,11 +47,11 @@
       <Transition name="modal-fade">
         <div v-if="showLogoutConfirm" class="logout-overlay" @click.self="showLogoutConfirm = false">
           <div class="logout-confirm">
-            <div class="logout-confirm-title">{{ lang === 'en' ? 'Confirm Logout' : '确认退出' }}</div>
-            <div class="logout-confirm-msg">{{ lang === 'en' ? 'Are you sure you want to logout?' : '您确定要退出系统吗？' }}</div>
+            <div class="logout-confirm-title">{{ i18n.t('confirmLogout') }}</div>
+            <div class="logout-confirm-msg">{{ i18n.t('confirmLogoutMsg') }}</div>
             <div class="logout-confirm-btns">
-              <button class="btn-cancel" @click="showLogoutConfirm = false">{{ lang === 'en' ? 'Cancel' : '取消' }}</button>
-              <button class="btn-confirm" @click="handleLogout">{{ lang === 'en' ? 'Confirm' : '确认退出' }}</button>
+              <button class="btn-cancel" @click="showLogoutConfirm = false">{{ i18n.t('cancel') }}</button>
+              <button class="btn-confirm" @click="handleLogout">{{ i18n.t('confirmBtn') }}</button>
             </div>
           </div>
         </div>
@@ -63,22 +63,22 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18nStore } from '@/stores/i18nStore'
 import type { User } from '@/stores/authStore'
 
 const props = defineProps<{
   user: User
-  lang: 'en' | 'zh'
   alertCount: number
 }>()
 
 const emit = defineEmits<{
   logout: []
   'switch-role': []
-  'toggle-lang': []
 }>()
 
 const route = useRoute()
 const router = useRouter()
+const i18n = useI18nStore()
 
 const showDropdown = ref(false)
 const showLogoutConfirm = ref(false)
@@ -92,10 +92,7 @@ const avatarLetter = computed(() => {
 
 const roleLabel = computed(() => {
   if (!props.user.role) return ''
-  if (props.lang === 'en') {
-    return props.user.role === 'owner' ? 'Owner' : 'Operator'
-  }
-  return props.user.role === 'owner' ? '业主' : '运维方'
+  return props.user.role === 'owner' ? i18n.t('owner') : i18n.t('operator')
 })
 
 // Derive visible routes from router config — single source of truth
@@ -122,7 +119,6 @@ function isActive(path: string): boolean {
 
 function handleSettings() {
   showDropdown.value = false
-  // Settings page placeholder - Phase 4+
 }
 
 function handleLogout() {
@@ -232,7 +228,7 @@ function handleLogout() {
   border-color: rgba(0, 255, 136, 0.5);
 }
 
-/* === User Dropdown (v2 style) === */
+/* === User Dropdown === */
 .user-dropdown {
   position: relative;
   display: inline-flex;

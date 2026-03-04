@@ -11,9 +11,9 @@
           </svg>
         </div>
         <div class="op-metric-body">
-          <span class="op-metric-label">Today Charge</span>
+          <span class="op-metric-label">{{ i18n.t('todayCharge') }}</span>
           <span class="op-metric-value">{{ totalCharge.toFixed(2) }}<small>MWh</small></span>
-          <span class="op-metric-sub">Cost: ${{ Math.abs(totalChargeCost).toFixed(0) }}</span>
+          <span class="op-metric-sub">{{ i18n.t('cost') }}: ${{ Math.abs(totalChargeCost).toFixed(0) }}</span>
         </div>
       </div>
 
@@ -24,9 +24,9 @@
           </svg>
         </div>
         <div class="op-metric-body">
-          <span class="op-metric-label">Today Discharge</span>
+          <span class="op-metric-label">{{ i18n.t('todayDischarge') }}</span>
           <span class="op-metric-value">{{ totalDischarge.toFixed(2) }}<small>MWh</small></span>
-          <span class="op-metric-sub">Revenue: ${{ totalDischargeRevenue.toFixed(0) }}</span>
+          <span class="op-metric-sub">{{ i18n.t('revenue') }}: ${{ totalDischargeRevenue.toFixed(0) }}</span>
         </div>
       </div>
 
@@ -38,12 +38,12 @@
           </svg>
         </div>
         <div class="op-metric-body">
-          <span class="op-metric-label">Net Profit</span>
+          <span class="op-metric-label">{{ i18n.t('netProfit') }}</span>
           <span class="op-metric-value" :class="netProfitTotal >= 0 ? 'val-positive' : 'val-negative'">
             {{ netProfitTotal >= 0 ? '+' : '' }}${{ netProfitTotal.toFixed(0) }}
           </span>
           <span class="op-metric-sub" :class="vsYesterday >= 0 ? 'val-positive' : 'val-negative'">
-            {{ vsYesterday >= 0 ? '▲' : '▼' }} {{ Math.abs(vsYesterday).toFixed(1) }}% vs Yesterday
+            {{ vsYesterday >= 0 ? '▲' : '▼' }} {{ Math.abs(vsYesterday).toFixed(1) }}% {{ i18n.t('vsYesterday') }}
           </span>
         </div>
       </div>
@@ -51,23 +51,26 @@
 
     <!-- === Market 图表 === -->
     <section class="chart-section">
-      <h2 class="chart-title">Market Overview — Price &amp; Demand (24h)</h2>
+      <h2 class="chart-title">{{ i18n.t('marketOverview') }}</h2>
       <div ref="marketChartRef" class="chart-container"></div>
     </section>
 
     <!-- === Power & Profit 图表 === -->
     <section class="chart-section">
-      <h2 class="chart-title">BESS Operations — Power &amp; Profit (24h)</h2>
+      <h2 class="chart-title">{{ i18n.t('bessOperations') }}</h2>
       <div ref="powerProfitChartRef" class="chart-container"></div>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, shallowRef, computed, onMounted, onUnmounted } from 'vue'
+import { ref, shallowRef, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import * as echarts from 'echarts'
+import { useI18nStore } from '@/stores/i18nStore'
 import { getOperatorChartData } from '@/mock/dashboard'
 import type { OperatorChartData } from '@/mock/dashboard'
+
+const i18n = useI18nStore()
 
 // === 数据 ===
 const chartData = ref<OperatorChartData>({ market: [], powerProfit: [] })
@@ -101,11 +104,8 @@ const vsYesterday = computed(() => {
   return 12.5
 })
 
-// === Market 图表初始化 ===
-function initMarketChart() {
-  if (!marketChartRef.value) return
-  marketChart.value = echarts.init(marketChartRef.value)
-
+// === 构建 Market 图表 option ===
+function buildMarketOption(): echarts.EChartsOption {
   const data = chartData.value.market
   const times = data.map(d => d.time)
   const historicalPrices = data.map(d => d.historicalPrice)
@@ -113,10 +113,9 @@ function initMarketChart() {
   const demands = data.map(d => d.demand)
   const predictedDemands = data.map(d => d.predictedDemand)
 
-  // 找当前时间索引（连接点）
   const currentIdx = data.findIndex(d => d.historicalPrice !== null && d.predictedPrice !== null)
 
-  const option: echarts.EChartsOption = {
+  return {
     backgroundColor: 'transparent',
     tooltip: {
       trigger: 'axis',
@@ -128,7 +127,7 @@ function initMarketChart() {
         let result = `<div style="font-weight:bold;margin-bottom:5px">${params[0].axisValue}</div>`
         params.forEach((p: any) => {
           if (p.value !== null && p.value !== undefined) {
-            const isPriceSeries = p.seriesName.includes('Price')
+            const isPriceSeries = p.seriesName.includes('Price') || p.seriesName.includes('价格')
             const val = isPriceSeries
               ? `$${typeof p.value === 'number' ? p.value.toFixed(2) : p.value}`
               : `${typeof p.value === 'number' ? p.value.toFixed(0) : p.value} MW`
@@ -139,7 +138,12 @@ function initMarketChart() {
       },
     },
     legend: {
-      data: ['Historical Price', 'Predicted Price', 'Demand', 'Predicted Demand'],
+      data: [
+        i18n.t('historicalPrice'),
+        i18n.t('predictedPrice'),
+        i18n.t('demand'),
+        i18n.t('predictedDemand'),
+      ],
       textStyle: { color: 'rgba(255,255,255,0.7)' },
       top: 10,
     },
@@ -164,7 +168,7 @@ function initMarketChart() {
     yAxis: [
       {
         type: 'value',
-        name: 'Price ($/MWh)',
+        name: i18n.t('priceMWh'),
         nameTextStyle: { color: 'rgba(255,255,255,0.7)', fontSize: 12 },
         position: 'left',
         scale: true,
@@ -180,7 +184,7 @@ function initMarketChart() {
       },
       {
         type: 'value',
-        name: 'Demand (MW)',
+        name: i18n.t('demandMW'),
         nameTextStyle: { color: 'rgba(255,255,255,0.7)', fontSize: 12 },
         position: 'right',
         scale: true,
@@ -194,7 +198,7 @@ function initMarketChart() {
     ],
     series: [
       {
-        name: 'Historical Price',
+        name: i18n.t('historicalPrice'),
         type: 'line',
         data: historicalPrices,
         smooth: true,
@@ -221,7 +225,7 @@ function initMarketChart() {
         } : undefined,
       },
       {
-        name: 'Demand',
+        name: i18n.t('demand'),
         type: 'line',
         yAxisIndex: 1,
         data: demands,
@@ -232,7 +236,7 @@ function initMarketChart() {
         itemStyle: { color: '#ffd700' },
       },
       {
-        name: 'Predicted Price',
+        name: i18n.t('predictedPrice'),
         type: 'line',
         data: predictedPrices,
         smooth: true,
@@ -248,7 +252,7 @@ function initMarketChart() {
         },
       },
       {
-        name: 'Predicted Demand',
+        name: i18n.t('predictedDemand'),
         type: 'line',
         yAxisIndex: 1,
         data: predictedDemands,
@@ -260,19 +264,14 @@ function initMarketChart() {
       },
     ],
   }
-
-  marketChart.value.setOption(option)
 }
 
-// === Power & Profit 图表初始化 ===
-function initPowerProfitChart() {
-  if (!powerProfitChartRef.value) return
-  powerProfitChart.value = echarts.init(powerProfitChartRef.value)
-
+// === 构建 Power & Profit 图表 option ===
+function buildPowerProfitOption(): echarts.EChartsOption {
   const data = chartData.value.powerProfit
   const times = data.map(d => d.time)
 
-  const option: echarts.EChartsOption = {
+  return {
     backgroundColor: 'transparent',
     tooltip: {
       trigger: 'axis',
@@ -297,7 +296,13 @@ function initPowerProfitChart() {
       },
     },
     legend: {
-      data: ['Charge (MWh)', 'Discharge (MWh)', 'Charge Cost ($)', 'Discharge Revenue ($)', 'Net Profit ($)'],
+      data: [
+        i18n.t('chargeMWh'),
+        i18n.t('dischargeMWh'),
+        i18n.t('chargeCost'),
+        i18n.t('dischargeRevenue'),
+        i18n.t('netProfitDollar'),
+      ],
       textStyle: { color: 'rgba(255,255,255,0.7)', fontSize: 11 },
       top: 0,
       itemGap: 12,
@@ -337,7 +342,7 @@ function initPowerProfitChart() {
     ],
     series: [
       {
-        name: 'Charge (MWh)',
+        name: i18n.t('chargeMWh'),
         type: 'bar',
         stack: 'energy',
         data: data.map(d => d.chargeEnergy),
@@ -345,7 +350,7 @@ function initPowerProfitChart() {
         barWidth: '35%',
       },
       {
-        name: 'Discharge (MWh)',
+        name: i18n.t('dischargeMWh'),
         type: 'bar',
         stack: 'energy',
         data: data.map(d => d.dischargeEnergy),
@@ -353,7 +358,7 @@ function initPowerProfitChart() {
         barWidth: '35%',
       },
       {
-        name: 'Charge Cost ($)',
+        name: i18n.t('chargeCost'),
         type: 'line',
         yAxisIndex: 1,
         data: data.map(d => d.chargeCost),
@@ -363,7 +368,7 @@ function initPowerProfitChart() {
         smooth: true,
       },
       {
-        name: 'Discharge Revenue ($)',
+        name: i18n.t('dischargeRevenue'),
         type: 'line',
         yAxisIndex: 1,
         data: data.map(d => d.dischargeRevenue),
@@ -373,7 +378,7 @@ function initPowerProfitChart() {
         smooth: true,
       },
       {
-        name: 'Net Profit ($)',
+        name: i18n.t('netProfitDollar'),
         type: 'line',
         yAxisIndex: 1,
         data: data.map(d => d.netProfit),
@@ -391,9 +396,28 @@ function initPowerProfitChart() {
       },
     ],
   }
-
-  powerProfitChart.value.setOption(option)
 }
+
+// === 初始化图表 ===
+function initMarketChart() {
+  if (!marketChartRef.value) return
+  marketChart.value = echarts.init(marketChartRef.value)
+  marketChart.value.setOption(buildMarketOption())
+}
+
+function initPowerProfitChart() {
+  if (!powerProfitChartRef.value) return
+  powerProfitChart.value = echarts.init(powerProfitChartRef.value)
+  powerProfitChart.value.setOption(buildPowerProfitOption())
+}
+
+// === locale 变化时重绘图表（用 nextTick 避免卡顿） ===
+watch(() => i18n.locale, () => {
+  nextTick(() => {
+    marketChart.value?.setOption(buildMarketOption(), true)
+    powerProfitChart.value?.setOption(buildPowerProfitOption(), true)
+  })
+})
 
 // === resize handler ===
 function handleResize() {

@@ -2,11 +2,9 @@
   <div class="app-layout">
     <AppHeader
       :user="authStore.user"
-      :lang="currentLang"
       :alert-count="0"
       @logout="handleLogout"
       @switch-role="handleSwitchRole"
-      @toggle-lang="toggleLang"
     />
     <main class="layout-content">
       <RouterView />
@@ -15,19 +13,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import { useRouter, RouterView } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 import AppHeader from './AppHeader.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
-
-const currentLang = ref<'en' | 'zh'>('en')
-
-function toggleLang() {
-  currentLang.value = currentLang.value === 'en' ? 'zh' : 'en'
-}
 
 function handleLogout() {
   authStore.logout()

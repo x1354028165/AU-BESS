@@ -1,0 +1,124 @@
+import { defineStore } from 'pinia'
+import { ref } from 'vue'
+
+export type Locale = 'en' | 'zh'
+
+// 翻译字典 — 覆盖所有已有的中文字符串
+const messages: Record<string, Record<Locale, string>> = {
+  // Dashboard 指标卡片
+  totalCapacity: { en: 'Total Capacity', zh: '总容量' },
+  realTimePower: { en: 'Real-time Power', zh: '实时总功率' },
+  todayRevenue: { en: 'Today Revenue', zh: '今日收益' },
+  avgSpotPrice: { en: 'Avg Spot Price', zh: '平均现货电价' },
+  activeAlerts: { en: 'Active Alerts', zh: '活跃告警' },
+
+  // 电站概览
+  stationOverview: { en: 'Station Overview', zh: '电站概览' },
+  online: { en: 'Online', zh: '在线' },
+  offline: { en: 'Offline', zh: '离线' },
+
+  // 电站卡片
+  soc: { en: 'SOC', zh: 'SOC' },
+  power: { en: 'Power', zh: '功率' },
+  capacity: { en: 'Capacity', zh: '容量' },
+  todayProfit: { en: 'Today Profit', zh: '今日收益' },
+
+  // 状态标签
+  charging: { en: 'Charging', zh: '充电中' },
+  discharging: { en: 'Discharging', zh: '放电中' },
+  idle: { en: 'Idle', zh: '待机' },
+
+  // 运行模式
+  fcasResponse: { en: 'FCAS Response', zh: 'FCAS响应' },
+  arbitrage: { en: 'Arbitrage', zh: '套利模式' },
+  vppDispatch: { en: 'VPP Dispatch', zh: 'VPP调度' },
+  standby: { en: 'Standby', zh: '备用待命' },
+  maintenance: { en: 'Maintenance', zh: '维护模式' },
+
+  // Operator 指标卡片
+  todayCharge: { en: 'Today Charge', zh: '今日充电' },
+  todayDischarge: { en: 'Today Discharge', zh: '今日放电' },
+  netProfit: { en: 'Net Profit', zh: '净利润' },
+  cost: { en: 'Cost', zh: '成本' },
+  revenue: { en: 'Revenue', zh: '收入' },
+  vsYesterday: { en: 'vs Yesterday', zh: '较昨日' },
+
+  // Operator 图表标题
+  marketOverview: { en: 'Market Overview — Price & Demand (24h)', zh: '市场概览 — 电价与需求 (24h)' },
+  bessOperations: { en: 'BESS Operations — Power & Profit (24h)', zh: 'BESS运营 — 充放电与收益 (24h)' },
+
+  // 图表 legend
+  historicalPrice: { en: 'Historical Price', zh: '历史价格' },
+  predictedPrice: { en: 'Predicted Price', zh: '预测价格' },
+  demand: { en: 'Demand', zh: '需求' },
+  predictedDemand: { en: 'Predicted Demand', zh: '预测需求' },
+  chargeMWh: { en: 'Charge (MWh)', zh: '充电 (MWh)' },
+  dischargeMWh: { en: 'Discharge (MWh)', zh: '放电 (MWh)' },
+  chargeCost: { en: 'Charge Cost ($)', zh: '充电成本 ($)' },
+  dischargeRevenue: { en: 'Discharge Revenue ($)', zh: '放电收入 ($)' },
+  netProfitDollar: { en: 'Net Profit ($)', zh: '净利润 ($)' },
+
+  // 图表轴标签
+  priceMWh: { en: 'Price ($/MWh)', zh: '电价 ($/MWh)' },
+  demandMW: { en: 'Demand (MW)', zh: '需求 (MW)' },
+
+  // 图表占位
+  chartsPlaceholder: { en: 'Charts Area - Phase 3', zh: '图表区域 - Phase 3' },
+
+  // 角色
+  owner: { en: 'Owner', zh: '业主' },
+  operator: { en: 'Operator', zh: '运维方' },
+
+  // Header UI
+  settings: { en: 'Settings', zh: '设置' },
+  logout: { en: 'Logout', zh: '退出' },
+  confirmLogout: { en: 'Confirm Logout', zh: '确认退出' },
+  confirmLogoutMsg: { en: 'Are you sure you want to logout?', zh: '您确定要退出系统吗？' },
+  cancel: { en: 'Cancel', zh: '取消' },
+  confirmBtn: { en: 'Confirm', zh: '确认退出' },
+}
+
+// 运行模式：mock数据中的中文值 → 翻译key 的映射
+const runModeKeyMap: Record<string, string> = {
+  'FCAS响应': 'fcasResponse',
+  '套利模式': 'arbitrage',
+  'VPP调度': 'vppDispatch',
+  '备用待命': 'standby',
+  '维护模式': 'maintenance',
+}
+
+export const useI18nStore = defineStore('i18n', () => {
+  const locale = ref<Locale>(
+    (localStorage.getItem('au-bess-locale') as Locale) || 'en'
+  )
+
+  function setLocale(l: Locale) {
+    locale.value = l
+    localStorage.setItem('au-bess-locale', l)
+  }
+
+  function toggleLocale() {
+    setLocale(locale.value === 'en' ? 'zh' : 'en')
+  }
+
+  /** 翻译函数：key不存在则原样返回 */
+  function t(key: string): string {
+    const entry = messages[key]
+    if (!entry) return key
+    return entry[locale.value] || entry['en'] || key
+  }
+
+  /** 运行模式翻译：接收mock里的中文字符串，返回当前语言对应值 */
+  function tRunMode(rawMode: string): string {
+    const key = runModeKeyMap[rawMode]
+    if (!key) return rawMode
+    return t(key)
+  }
+
+  return { locale, setLocale, toggleLocale, t, tRunMode }
+}, {
+  persist: {
+    key: 'au-bess-locale-v1',
+    paths: ['locale'],
+  },
+})
