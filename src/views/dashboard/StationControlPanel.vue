@@ -197,9 +197,9 @@
             <div class="auto-conditions-grid">
               <div class="condition-card charge-condition">
                 <div class="condition-title">⚡ {{ i18n.t('chargeConditions') }}</div>
-                <div class="condition-slot">
-                  <div class="slot-label">{{ i18n.t('timeSlot') }} 1</div>
-                  <div class="slot-value">🕐 {{ autoChargeStart }} – {{ autoChargeEnd }}</div>
+                <div v-for="(p, idx) in editChargePeriods" :key="'cc'+idx" class="condition-slot">
+                  <div class="slot-label">{{ i18n.t('timeSlot') }} {{ idx + 1 }}</div>
+                  <div class="slot-value"><span class="time-icon">⏰</span> {{ p.start }} – {{ p.end }}</div>
                 </div>
                 <div class="condition-soc">
                   ✓ {{ i18n.t('chargeToSOC') }} <span class="soc-val charge-val">{{ chargeStopSOC }}%</span>
@@ -208,9 +208,9 @@
 
               <div class="condition-card discharge-condition">
                 <div class="condition-title">🔋 {{ i18n.t('dischargeConditions') }}</div>
-                <div class="condition-slot">
-                  <div class="slot-label">{{ i18n.t('timeSlot') }} 1</div>
-                  <div class="slot-value">🕐 {{ autoDischargeStart }} – {{ autoDischargeEnd }}</div>
+                <div v-for="(p, idx) in editDischargePeriods" :key="'dc'+idx" class="condition-slot">
+                  <div class="slot-label">{{ i18n.t('timeSlot') }} {{ idx + 1 }}</div>
+                  <div class="slot-value"><span class="time-icon">⏰</span> {{ p.start }} – {{ p.end }}</div>
                 </div>
                 <div class="condition-soc">
                   ✓ {{ i18n.t('dischargeToSOC') }} <span class="soc-val discharge-val">{{ dischargeStopSOC }}%</span>
@@ -1434,7 +1434,7 @@ function saveSettings() {
   padding: 10px 24px;
   border-radius: 8px;
   border: none;
-  color: #fff;
+  color: #1a1f2e;
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
